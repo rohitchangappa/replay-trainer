@@ -61,8 +61,8 @@
         color:var(--muted); font-size:13px; font-weight:600; text-align:center;}
   .sbtn.on{background:var(--panel2); color:var(--text); border-color:var(--blue);}
   #brktHint{font-size:11px; color:var(--dim); padding:0 12px 3px;}
-  #brkt{display:flex; padding:0 10px 6px; gap:6px;}
-  #brkt.flat{opacity:.45;}
+  #brkt{display:none; padding:0 10px 6px; gap:6px;}
+  #brkt.show{display:flex;}
   .bcol{flex:1; background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:6px 8px;}
   .bcol .k{font-size:11px; color:var(--muted); text-align:center;}
   .brow{display:flex; align-items:center; gap:4px; margin-top:3px;}
@@ -164,7 +164,7 @@
 </div>
 
 <div id="brktHint"></div>
-<div id="brkt" class="flat">
+<div id="brkt">
   <div class="bcol">
     <div class="k">Stop loss (underlying)</div>
     <div class="brow"><div class="adj" data-t="sl" data-d="-1">−</div><div class="bval" id="slVal">—</div><div class="adj" data-t="sl" data-d="1">+</div></div>
@@ -266,6 +266,7 @@ let sessIV = 0.2;
 let viewN = 95, viewOfs = 0, dispTf = 1;
 let lastV = null;
 let dragLine = null, dragLvIdx = -1, dragLastY = null;
+let dragOffY = 0, scaleLock = null;    // TV-feel: keep line under the finger, freeze scale while dragging
 
 let phase = "setup";
 let ordMode = false, ordPx = null;
@@ -554,7 +555,7 @@ function stepTick(){
   if(tickIdx >= TICKS) finalizeCandle();
   if(cfg.r1545 && minuteOfDay() >= 945){
     if(pos){ closePos("Rulebook: 15:45 force-exit"); showBanner("15:45 force-exit — flat into the close","warn"); }
-    if(pend){ pend=null; renderActions(); }
+    if(pend){ pend=null; syncBrkt(); renderActions(); }
   }
   updateHUD();
 }
@@ -678,7 +679,7 @@ function placeOrder(dir){
     pend = {dir, px, sl:snap(px - dir*r0), tp:snap(px + dir*2*r0)};
     showBanner("Order resting at "+px.toFixed(2)+" with SL/TP bracket — drag any of the three lines","warn");
   }
-  renderActions(); draw();
+  syncBrkt(); renderActions(); draw();
 }
 
 /* =============== action row =============== */
@@ -712,7 +713,7 @@ function renderActions(){
       ordMode=true; ordPx=price;
       renderActions(); draw();
     };
-    if(pend) $("cxOB").onclick = ()=>{ pend=null; renderActions(); draw(); };
+    if(pend) $("cxOB").onclick = ()=>{ pend=null; syncBrkt(); renderActions(); draw(); };
     const eb=$("exitB2");
     eb.disabled = !pos;
     eb.onclick = ()=>{ if(pos) closePos("Manual exit"); };
@@ -776,19 +777,21 @@ function showBanner(msg, cls){
 function hideBanner(){ $("banner").style.display="none"; }
 
 /* =============== SL/TP panel =============== */
+function brktTarget(){ return pos || pend; }   // panel edits the live position, or the resting order's bracket
 function syncBrkt(){
-  $("brkt").className = pos ? "" : "flat";
-  $("slVal").textContent = pos ? fmt(pos.sl) : "—";
-  $("tpVal").textContent = pos ? fmt(pos.tp) : "—";
+  const t = brktTarget();
+  $("brkt").className = t ? "show" : "";
+  $("slVal").textContent = t ? fmt(t.sl) : "—";
+  $("tpVal").textContent = t ? fmt(t.tp) : "—";
   updateHint();
 }
 document.querySelectorAll(".adj").forEach(el=>{
   el.addEventListener("click", ()=>{
-    if(!pos) return;
+    const t = brktTarget(); if(!t) return;
     const d = +el.dataset.d * inst().tick;
-    if(el.dataset.t==="sl") pos.sl = +(pos.sl+d).toFixed(2);
-    else pos.tp = +(pos.tp+d).toFixed(2);
-    syncBrkt(); checkStops(); draw();
+    if(el.dataset.t==="sl") t.sl = +(t.sl+d).toFixed(2);
+    else t.tp = +(t.tp+d).toFixed(2);
+    syncBrkt(); if(pos) checkStops(); draw();
   });
 });
 $("beB").addEventListener("click", ()=>{ if(pos){ pos.sl=pos.entry; syncBrkt(); draw(); }});
@@ -802,10 +805,11 @@ $("structB").addEventListener("click", ()=>{
 });
 document.querySelectorAll("[data-r]").forEach(el=>{
   el.addEventListener("click", ()=>{
-    if(!pos) return;
-    const R = Math.max(Math.abs(pos.entry-pos.sl), inst().tick);
-    pos.tp = snap(pos.entry + pos.dir*R*(+el.dataset.r));
-    syncBrkt(); checkStops(); draw();
+    const t = brktTarget(); if(!t) return;
+    const base = pos ? pos.entry : pend.px;
+    const R = Math.max(Math.abs(base - t.sl), inst().tick);
+    t.tp = snap(base + t.dir*R*(+el.dataset.r));
+    syncBrkt(); if(pos) checkStops(); draw();
   });
 });
 
@@ -827,29 +831,30 @@ const yAtPrice = p => lastV.chH - (p-lastV.lo)/(lastV.hi-lastV.lo)*lastV.chH;
 cv.addEventListener("pointerdown", e=>{
   try{cv.setPointerCapture(e.pointerId);}catch(_){}
   const y = canvasY(e);
+  const grab = (name, p)=>{ dragLine=name; dragOffY = y - yAtPrice(p); scaleLock = {...lastV}; };
   if(ordMode && lastV){
-    if(Math.abs(y - yAtPrice(ordPx)) < 32){ dragLine="ord"; return; }
+    if(Math.abs(y - yAtPrice(ordPx)) < 32){ grab("ord", ordPx); return; }
     dragX=e.clientX; dragOfs=viewOfs; return;   // away from the line = pan
   }
   if(phase==="live" && pend && !pos && lastV){
     const cands=[["opx",pend.px],["osl",pend.sl],["otp",pend.tp]];
-    let bn=null, bd=24;
-    cands.forEach(([k,p])=>{ const d=Math.abs(y-yAtPrice(p)); if(d<bd){bd=d;bn=k;} });
-    if(bn){ dragLine=bn; return; }
+    let bn=null, bp=null, bd=24;
+    cands.forEach(([k,p])=>{ const d=Math.abs(y-yAtPrice(p)); if(d<bd){bd=d;bn=k;bp=p;} });
+    if(bn){ grab(bn, bp); return; }
   }
   if(phase==="setup" && lastV && sessLv.length){
     let bi=-1, bd=28;
     sessLv.forEach((p,i)=>{ const d=Math.abs(y-yAtPrice(p)); if(d<bd){bd=d;bi=i;} });
-    if(bi>=0){ dragLvIdx=bi; dragLastY=y; return; }
+    if(bi>=0){ dragLvIdx=bi; dragLastY=y; dragOffY = y - yAtPrice(sessLv[bi]); scaleLock = {...lastV}; return; }
   }
   if(phase==="live" && pos && lastV){
     const dS = Math.abs(y - yAtPrice(pos.sl)), dT = Math.abs(y - yAtPrice(pos.tp));
-    if(Math.min(dS,dT) < 26){ dragLine = dS<=dT ? "sl" : "tp"; return; }
+    if(Math.min(dS,dT) < 26){ grab(dS<=dT ? "sl" : "tp", dS<=dT ? pos.sl : pos.tp); return; }
   }
   dragX=e.clientX; dragOfs=viewOfs;
 });
 cv.addEventListener("pointermove", e=>{
-  const y = canvasY(e);
+  const y = canvasY(e) - dragOffY;       // line stays under the grab point, TV-style
   if(dragLine==="ord" && lastV){
     ordPx = snap(clamp(priceAtY(y), lastV.lo, lastV.hi));
     draw(); return;
@@ -896,6 +901,7 @@ const endDrag = ()=>{
   }
   if(dragLine==="sl"||dragLine==="tp") checkStops();
   dragLine=null; dragLvIdx=-1; dragLastY=null; dragX=null;
+  dragOffY=0; scaleLock=null;
   draw();
 };
 cv.addEventListener("pointerup", endDrag);
@@ -995,6 +1001,7 @@ function draw(){
   if(pos){ lo=Math.min(lo,pos.sl,pos.tp); hi=Math.max(hi,pos.sl,pos.tp); }
   if(pend){ lo=Math.min(lo,pend.px,pend.sl,pend.tp); hi=Math.max(hi,pend.px,pend.sl,pend.tp); }
   const pad=(hi-lo)*0.07||1; lo-=pad; hi+=pad;
+  if(scaleLock){ lo=scaleLock.lo; hi=scaleLock.hi; }  // no rescaling under an active drag
   const Y=p=>chH-(p-lo)/(hi-lo)*chH;
   lastV = {lo, hi, chH};
 
