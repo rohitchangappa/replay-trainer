@@ -50,12 +50,11 @@
   #banner.warn{background:#7a5a1e; color:#ffd88a;}
   #sessionTag{position:absolute; top:8px; left:10px; font-size:12px; font-weight:600; color:var(--muted); z-index:4;
               background:var(--panel); border:1px solid var(--line); padding:2px 6px; border-radius:4px; opacity:.92;}
-  #chartBtns{position:absolute; top:8px; right:10px; display:flex; gap:6px; z-index:5;}
-  .cbtn{padding:4px 12px; background:var(--panel); border:1px solid var(--line); border-radius:6px;
-        color:var(--muted); font-size:14px; font-weight:700; opacity:.92;}
+  #chartBtns{display:flex; gap:6px; padding:4px 10px 2px;}
+  .cbtn{flex:1; padding:8px 0; text-align:center; background:var(--panel); border:1px solid var(--line);
+        border-radius:8px; color:var(--muted); font-size:14px; font-weight:700;}
   .cbtn.tfc.on{color:var(--text); border-color:var(--blue); background:var(--panel2);}
   #liveB{display:none; color:var(--amber); border-color:var(--amber);}
-  #speedCap{font-size:11px; color:var(--dim); padding:0 12px 2px;}
   #speedRow{display:flex; gap:6px; padding:0 10px 6px;}
   .sbtn{flex:1; padding:9px 0; background:var(--panel); border:1px solid var(--line); border-radius:8px;
         color:var(--muted); font-size:13px; font-weight:600; text-align:center;}
@@ -135,19 +134,18 @@
 <div id="chartWrap">
   <canvas id="cv"></canvas>
   <div id="sessionTag"></div>
-  <div id="chartBtns">
-    <div class="cbtn tfc on" data-tf="1">1m</div>
-    <div class="cbtn tfc" data-tf="5">5m</div>
-    <div class="cbtn tfc" data-tf="15">15m</div>
-    <div class="cbtn tfc" data-tf="D">D</div>
-    <div class="cbtn" id="liveB">LIVE ▸</div>
-    <div class="cbtn" id="zoomOutB">−</div>
-    <div class="cbtn" id="zoomInB">+</div>
-  </div>
   <div id="banner"></div>
 </div>
 
-<div id="speedCap">Replay speed — 1× = real time (60s per 1-min candle), higher = faster playback</div>
+<div id="chartBtns">
+  <div class="cbtn tfc on" data-tf="1">1m</div>
+  <div class="cbtn tfc" data-tf="5">5m</div>
+  <div class="cbtn tfc" data-tf="15">15m</div>
+  <div class="cbtn tfc" data-tf="D">D</div>
+  <div class="cbtn" id="liveB">LIVE ▸</div>
+  <div class="cbtn" id="zoomOutB">−</div>
+  <div class="cbtn" id="zoomInB">+</div>
+</div>
 <div id="speedRow">
   <div class="sbtn" id="pauseB">⏸</div>
   <div class="sbtn spd" data-s="1">1× real</div>
@@ -892,10 +890,11 @@ cv.addEventListener("pointermove", e=>{
   }
   if(dragX==null) return;
   const bwpx = Math.max((cv.clientWidth-52)/viewN, 1);
-  viewOfs = dragOfs + Math.round((e.clientX-dragX)/bwpx);   // negative = blank space right of the last candle, TV-style
+  viewOfs = dragOfs + (e.clientX-dragX)/bwpx;   // fractional = pixel-smooth pan; negative = blank right margin
   draw();
 });
 const endDrag = ()=>{
+  viewOfs = Math.round(viewOfs);
   if(dragLvIdx>=0 && lastV && dragLastY!=null && (dragLastY<12 || dragLastY>lastV.chH-6)){
     sessLv.splice(dragLvIdx,1);
   }
@@ -988,13 +987,15 @@ function draw(){
   const maxOfs = Math.max(0, all.length - NV);
   if(viewOfs > maxOfs) viewOfs = maxOfs;
   if(viewOfs < -(NV-8)) viewOfs = -(NV-8);   // keep at least a few candles on screen
-  const lb=$("liveB"), lshow = viewOfs!==0 ? "block" : "none";
+  const oInt = Math.round(viewOfs);
+  const lb=$("liveB"), lshow = oInt!==0 ? "block" : "none";
   if(lb.style.display !== lshow) lb.style.display = lshow;
-  const end = all.length - viewOfs;
+  const end = all.length - oInt;
   const start = Math.max(0, end - NV);
   const vis = all.slice(start, end);
   if(!vis.length) return;
   const bw = chW/NV;
+  const xSh = (viewOfs - oInt)*bw;   // sub-candle shift while panning
 
   // y-range
   let lo=Infinity, hi=-Infinity;
@@ -1019,7 +1020,7 @@ function draw(){
   const cadence = T===1?15 : T===5?30 : 60;
   const cadPrior = T===1?60 : T===5?60 : 120;
   for(let vi=0; vi<vis.length; vi++){
-    const idx = start + vi, x = vi*bw + bw/2, b = vis[vi];
+    const idx = start + vi, x = vi*bw + bw/2 + xSh, b = vis[vi];
     if(b.m==null){                       // daily view: relative day labels, no dates
       const back = all.length-1-idx;
       if(back>0 && back%10===0){
@@ -1072,7 +1073,7 @@ function draw(){
     const vmax=Math.max(...vis.map(b=>b.v||1));
     ctx.globalAlpha=0.35;
     vis.forEach((b,i)=>{
-      const x=i*bw;
+      const x=i*bw+xSh;
       ctx.fillStyle = b.c>=b.o ? P.up : P.dn;
       const h=(b.v/vmax)*(volH-6);
       ctx.fillRect(x+bw*0.15, H-h, bw*0.7, h);
@@ -1082,7 +1083,7 @@ function draw(){
 
   // candles
   vis.forEach((b,i)=>{
-    const x=i*bw+bw/2;
+    const x=i*bw+bw/2+xSh;
     const up=b.c>=b.o;
     const col = up?P.up:P.dn;
     ctx.globalAlpha = b.pre?0.42 : b.prev?0.62 : 1;
@@ -1106,7 +1107,7 @@ function draw(){
       const si = Math.min((j+1)*T-1, st.series.length-1);
       const v = st.series[si];
       if(v==null) continue;
-      const x=vi*bw+bw/2, y=Y(v);
+      const x=vi*bw+bw/2+xSh, y=Y(v);
       if(y<-20||y>chH+20) continue;
       if(!started){ ctx.moveTo(x,y); started=true; } else ctx.lineTo(x,y);
       lastXY=[x,y];
