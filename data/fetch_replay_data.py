@@ -70,6 +70,22 @@ def fetch_symbol(name, yahoo_sym, prepost):
     return out
 
 
+def fetch_daily(name, yahoo_sym):
+    """2 years of daily closes — used by the game for the daily 50/200 EMA lines."""
+    df = yf.download(yahoo_sym, interval="1d", period="2y",
+                     progress=False, auto_adjust=False, threads=False)
+    out = []
+    if df is not None and len(df):
+        if hasattr(df.columns, "levels"):
+            df.columns = [c[0] for c in df.columns]
+        for ts, row in df.iterrows():
+            c = row.get("Close")
+            if c != c:
+                continue
+            out.append({"time": int(ts.timestamp()), "close": round(float(c), 4)})
+    return out
+
+
 def main():
     for name, spec in SYMBOLS.items():
         print(f"Fetching {name} ({spec['yahoo']}) — real 1m bars, last {DAYS_BACK} days")
@@ -83,8 +99,14 @@ def main():
         first = dt.datetime.fromtimestamp(rows[0]["time"]).date()
         last = dt.datetime.fromtimestamp(rows[-1]["time"]).date()
         print(f"  wrote {fn}: {len(rows):,} bars, {first} -> {last}")
-    print("\nDone. Move the JSON files to the tablet and import each one in the game")
-    print("(settings gear -> pick instrument in the dropdown -> choose file).")
+        daily = fetch_daily(name, spec["yahoo"])
+        if daily:
+            with open(f"{name}_1d.json", "w") as f:
+                json.dump(daily, f)
+            print(f"  wrote {name}_1d.json: {len(daily)} daily closes (for daily 50/200 EMAs)")
+        time.sleep(1.5)
+    print("\nDone. The game auto-loads these from the repo's data folder;")
+    print("manual import on the tablet remains available as a fallback.")
 
 
 if __name__ == "__main__":

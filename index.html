@@ -32,7 +32,6 @@
     display:flex; flex-direction:column;
     touch-action:manipulation; user-select:none;
   }
-  /* ---------- header ---------- */
   #hdr{display:flex; gap:8px; padding:8px 10px 4px;}
   .stat{flex:1; background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:6px 10px; min-width:0;}
   .stat .k{font-size:11px; color:var(--muted);}
@@ -41,7 +40,6 @@
   #posV.long{color:var(--green);} #posV.short{color:var(--red);}
   #gear{flex:0 0 44px; font-size:20px; background:var(--panel); border:1px solid var(--line);
         border-radius:8px; color:var(--muted); display:flex; align-items:center; justify-content:center;}
-  /* ---------- chart ---------- */
   #chartWrap{flex:1; position:relative; margin:6px 10px; min-height:120px;}
   canvas{position:absolute; inset:0; width:100%; height:100%; border:1px solid var(--line); border-radius:8px; background:var(--chartbg); touch-action:none;}
   #banner{
@@ -55,14 +53,13 @@
   #chartBtns{position:absolute; top:8px; right:10px; display:flex; gap:6px; z-index:5;}
   .cbtn{padding:4px 12px; background:var(--panel); border:1px solid var(--line); border-radius:6px;
         color:var(--muted); font-size:14px; font-weight:700; opacity:.92;}
+  .cbtn.tfc.on{color:var(--text); border-color:var(--blue); background:var(--panel2);}
   #liveB{display:none; color:var(--amber); border-color:var(--amber);}
-  /* ---------- speed row ---------- */
   #speedCap{font-size:11px; color:var(--dim); padding:0 12px 2px;}
   #speedRow{display:flex; gap:6px; padding:0 10px 6px;}
   .sbtn{flex:1; padding:9px 0; background:var(--panel); border:1px solid var(--line); border-radius:8px;
         color:var(--muted); font-size:13px; font-weight:600; text-align:center;}
   .sbtn.on{background:var(--panel2); color:var(--text); border-color:var(--blue);}
-  /* ---------- SL/TP panel ---------- */
   #brktHint{font-size:11px; color:var(--dim); padding:0 12px 3px;}
   #brkt{display:flex; padding:0 10px 6px; gap:6px;}
   #brkt.flat{opacity:.45;}
@@ -76,12 +73,10 @@
   .bquick{margin-top:4px; display:flex; gap:4px;}
   .qbtn{flex:1; padding:6px 0; font-size:11px; background:var(--panel2); border:1px solid var(--line);
         border-radius:6px; color:var(--muted); text-align:center;}
-  /* ---------- premium strip ---------- */
   #premRow{display:none; margin:0 10px 6px; padding:7px 12px; background:var(--panel); border:1px solid var(--line);
            border-radius:8px; font-size:13px; justify-content:space-between; align-items:center;}
   #premRow.show{display:flex;}
   #premChg.pos{color:var(--green);} #premChg.neg{color:var(--red);}
-  /* ---------- action row ---------- */
   #actRow{display:flex; gap:10px; padding:0 10px 8px;}
   .abtn{flex:1; padding:16px 0; border:none; border-radius:12px; font-size:18px; font-weight:800;
         letter-spacing:.5px; color:#fff; text-align:center;}
@@ -94,13 +89,13 @@
   .abtn.neutral{background:var(--panel2); color:var(--text); border:1px solid var(--line);}
   .abtn.exit{background:var(--panel); color:var(--dim); border:1px solid var(--line);}
   .abtn.exit.live{background:var(--panel2); color:var(--text); border-color:var(--amber);}
-  /* ---------- overlays ---------- */
   .overlay{position:fixed; inset:0; background:rgba(6,10,15,.72); z-index:20; display:none;
            align-items:center; justify-content:center; padding:16px;}
   .overlay.show{display:flex;}
   .card{background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:20px;
         width:100%; max-width:480px; max-height:90vh; overflow-y:auto;}
   .card h2{font-size:18px; margin-bottom:12px;}
+  .card h3{font-size:14px; margin:12px 0 4px; color:var(--muted);}
   .card p{font-size:13px; color:var(--muted); line-height:1.5; margin-bottom:10px;}
   .row2{display:flex; justify-content:space-between; font-size:14px; padding:5px 0; border-bottom:1px solid var(--line);}
   .row2 span:last-child{font-weight:600;}
@@ -141,6 +136,9 @@
   <canvas id="cv"></canvas>
   <div id="sessionTag"></div>
   <div id="chartBtns">
+    <div class="cbtn tfc on" data-tf="1">1m</div>
+    <div class="cbtn tfc" data-tf="5">5m</div>
+    <div class="cbtn tfc" data-tf="15">15m</div>
     <div class="cbtn" id="liveB">LIVE ▸</div>
     <div class="cbtn" id="zoomOutB">−</div>
     <div class="cbtn" id="zoomInB">+</div>
@@ -148,7 +146,7 @@
   <div id="banner"></div>
 </div>
 
-<div id="speedCap">Replay speed — 1× = real time (60s per candle), higher = faster playback</div>
+<div id="speedCap">Replay speed — 1× = real time (60s per 1-min candle), higher = faster playback</div>
 <div id="speedRow">
   <div class="sbtn" id="pauseB">⏸</div>
   <div class="sbtn spd" data-s="1">1× real</div>
@@ -194,15 +192,22 @@
   <label class="set">Trade 0DTE options (SPY/QQQ only) <input type="checkbox" id="optC" checked></label>
   <label class="set">Quantity (contracts / shares) <input type="number" id="qtyIn" value="1" step="1" min="1"></label>
   <label class="set">Rulebook: premium stops (−15% soft / −25% floor) <input type="checkbox" id="pRulesC" checked></label>
-  <label class="set"><span>EMA 1 — show &amp; period</span><span class="pair"><input type="checkbox" id="ema1C" checked><input type="number" id="e1In" value="9" min="2" max="400"></span></label>
-  <label class="set"><span>EMA 2 — show &amp; period</span><span class="pair"><input type="checkbox" id="ema2C" checked><input type="number" id="e2In" value="21" min="2" max="400"></span></label>
+  <h3>Moving averages (periods are editable)</h3>
+  <label class="set"><span>EMA on <b>5m</b></span><span class="pair"><input type="checkbox" id="eOn0" checked><input type="number" id="eP0" value="5" min="2" max="400"></span></label>
+  <label class="set"><span>EMA on <b>5m</b></span><span class="pair"><input type="checkbox" id="eOn1" checked><input type="number" id="eP1" value="50" min="2" max="400"></span></label>
+  <label class="set"><span>EMA on <b>5m</b></span><span class="pair"><input type="checkbox" id="eOn2" checked><input type="number" id="eP2" value="200" min="2" max="400"></span></label>
+  <label class="set"><span>EMA on <b>15m</b></span><span class="pair"><input type="checkbox" id="eOn3" checked><input type="number" id="eP3" value="5" min="2" max="400"></span></label>
+  <label class="set"><span>EMA on <b>15m</b></span><span class="pair"><input type="checkbox" id="eOn4" checked><input type="number" id="eP4" value="50" min="2" max="400"></span></label>
+  <label class="set"><span>EMA on <b>15m</b></span><span class="pair"><input type="checkbox" id="eOn5" checked><input type="number" id="eP5" value="200" min="2" max="400"></span></label>
+  <label class="set"><span>EMA on <b>Daily</b> (level line)</span><span class="pair"><input type="checkbox" id="eOn6" checked><input type="number" id="eP6" value="50" min="2" max="400"></span></label>
+  <label class="set"><span>EMA on <b>Daily</b> (level line)</span><span class="pair"><input type="checkbox" id="eOn7" checked><input type="number" id="eP7" value="200" min="2" max="400"></span></label>
   <label class="set">Volume pane <input type="checkbox" id="volC" checked></label>
   <label class="set">Levels (PDH/PDL/PMH/PML/ORB) <input type="checkbox" id="lvlC" checked></label>
   <label class="set">Rulebook: force flat 15:45 <input type="checkbox" id="r1545C" checked></label>
   <label class="set">Rulebook: structural-stop alerts <input type="checkbox" id="structC" checked></label>
   <p style="margin-top:10px">Standing levels (one price per line — kept across sessions; per-day levels are marked on the chart before you press START):</p>
   <textarea id="lvlIn" placeholder="574.50&#10;576.20"></textarea>
-  <p style="margin-top:10px">Real data auto-loads from the app's site (data folder in the repo) when available. Manual import below is the fallback — JSON <code>[{time,open,high,low,close,volume}]</code> or TradingView CSV. Pick the instrument, then choose the file.</p>
+  <p style="margin-top:10px">Real data auto-loads from the app's site (data folder in the repo). Manual import is the fallback — JSON <code>[{time,open,high,low,close,volume}]</code> or TradingView CSV. Pick the instrument, then choose the file.</p>
   <div style="display:flex; gap:8px; align-items:center;">
     <select id="impSym"><option>SPY</option><option>QQQ</option><option>ES</option><option>NQ</option></select>
     <input type="file" id="fileIn" accept=".json,.csv,.txt">
@@ -230,36 +235,51 @@
 <script>
 "use strict";
 /* =============== config / state =============== */
-const TICKS = 24;                       // synthetic ticks per 1m candle
+const TICKS = 24;
 const INST = {
-  SPY:{tick:0.05, mult:1,  unit:"sh", fut:false, opt:true,  strikeStep:1, px0:()=>555+rnd()*35,   r0:0.50},
-  QQQ:{tick:0.05, mult:1,  unit:"sh", fut:false, opt:true,  strikeStep:1, px0:()=>470+rnd()*35,   r0:0.50},
-  ES :{tick:0.25, mult:50, unit:"ct", fut:true,  opt:false, strikeStep:5, px0:()=>5800+rnd()*250, r0:5},
-  NQ :{tick:0.25, mult:20, unit:"ct", fut:true,  opt:false, strikeStep:25,px0:()=>21000+rnd()*900,r0:20},
+  SPY:{tick:0.05, mult:1,  fut:false, opt:true,  strikeStep:1, px0:()=>555+rnd()*35,   r0:0.50},
+  QQQ:{tick:0.05, mult:1,  fut:false, opt:true,  strikeStep:1, px0:()=>470+rnd()*35,   r0:0.50},
+  ES :{tick:0.25, mult:50, fut:true,  opt:false, strikeStep:5, px0:()=>5800+rnd()*250, r0:5},
+  NQ :{tick:0.25, mult:20, fut:true,  opt:false, strikeStep:25,px0:()=>21000+rnd()*900,r0:20},
 };
 let sym = "SPY";
 const inst = () => INST[sym];
+const EMA_SLOTS = [ // fixed timeframes, editable periods
+  {tf:5,p:5},{tf:5,p:50},{tf:5,p:200},
+  {tf:15,p:5},{tf:15,p:50},{tf:15,p:200},
+  {tf:"D",p:50},{tf:"D",p:200}
+];
+/* Rohit's TV scheme — color by period (5=red, 50=black, 200=blue), thickness by timeframe */
+function emaStyle(slot){
+  const L = document.body.classList.contains("light");
+  const e = cfg.emas[slot];
+  const col = e.p<=20 ? "#e53935" : e.p<=100 ? (L?"#111827":"#e5e7eb") : "#2962ff";
+  const w = e.tf===5 ? 1 : e.tf===15 ? 2.6 : 3.4;
+  return {col, w};
+}
 const cfg = { qty:1, opt:true, pRules:true, theme:"light", cb:false,
-              ema1:true, ema2:true, e1:9, e2:21,
+              emas: EMA_SLOTS.map(s=>({on:true, p:s.p, tf:s.tf})),
               vol:true, lvls:true, r1545:true, struct:true, custom:[] };
 let speed = 5, paused = false, tickTimer = null;
-let sessIV = 0.2;                       // annualized IV estimate for this session's 0DTE options
-let viewN = 95, viewOfs = 0;            // chart zoom (bars shown) and pan (bars back from live edge)
-let lastV = null;                       // last draw's price scale (for touch -> price mapping)
+let sessIV = 0.2;
+let viewN = 95, viewOfs = 0, dispTf = 1;
+let lastV = null;
 let dragLine = null, dragLvIdx = -1, dragLastY = null;
 
-let phase = "setup";                    // "setup" (mark levels on pre-data) | "live" (replay running)
-let ordMode = false, ordPx = null;      // on-chart order-entry line
-let pend = null;                        // resting order {dir, px}
-let sessLv = [];                        // per-day levels marked before START
+let phase = "setup";
+let ordMode = false, ordPx = null;
+let pend = null;
+let sessLv = [];
 
-let importedBySym = {};                 // sym -> days[] of real data
-let D = null;                           // active dataset {prior, pre, rth}
-let lv = {};                            // auto levels
-let done = [];                          // completed session bars (today, RTH)
-let forming = null;                     // forming bar {o,h,l,c,v}
+let importedBySym = {};                 // sym -> days[] ({date, prior, pre, rth, w1, w5, w15})
+let dailyBySym = {};                    // sym -> [{d:"YYYY-MM-DD", c}]
+let D = null;
+let lv = {};
+let dailyEmaLines = [];                 // [{lbl,val,col}]
+let emaLive = [];                       // intraday EMA engines
+let done = [];
+let forming = null;
 let barIdx = 0, tickIdx = 0, ticks = [];
-let ema1v = [], ema2v = [];             // per completed bar
 let price = null, prevPrice = null, dayOver = false;
 
 let pos = null;
@@ -276,7 +296,7 @@ function gauss(){ let u=0,v=0; while(!u)u=rnd(); while(!v)v=rnd();
   return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v); }
 const snap = p => +(Math.round(p/inst().tick)*inst().tick).toFixed(2);
 
-/* =============== palette (theme + colorblind aware) =============== */
+/* =============== palette =============== */
 function pal(){
   const L = cfg.theme==="light";
   return {
@@ -291,7 +311,6 @@ function pal(){
     entry:L? "#303a46" : "#d8e0ea",
     lvl: "#8a97a5",
     gold:"#c09a3e", pmcol:L?"#4d87c7":"#6ea8d8", orcol:"#b06fd8",
-    e1col:"#a855f7", e2col:L?"#55606c":"#94a3b8",
     div: L ? "#c3ccd5" : "#3a4654",
     ord: "#6d6af0",
   };
@@ -303,8 +322,8 @@ function applyTheme(){
 function saveCfg(){
   try{ localStorage.setItem("rt_cfg", JSON.stringify({
     theme:cfg.theme, cb:cfg.cb, opt:cfg.opt, pRules:cfg.pRules, qty:cfg.qty,
-    ema1:cfg.ema1, ema2:cfg.ema2, e1:cfg.e1, e2:cfg.e2,
-    vol:cfg.vol, lvls:cfg.lvls, r1545:cfg.r1545, struct:cfg.struct, custom:cfg.custom, sym
+    emas:cfg.emas, vol:cfg.vol, lvls:cfg.lvls, r1545:cfg.r1545, struct:cfg.struct,
+    custom:cfg.custom, sym
   })); }catch(_){}
 }
 function loadCfg(){
@@ -312,6 +331,7 @@ function loadCfg(){
     const j = JSON.parse(localStorage.getItem("rt_cfg")||"{}");
     if(j.sym && INST[j.sym]) sym = j.sym;
     delete j.sym;
+    if(j.emas && (!Array.isArray(j.emas) || j.emas.length!==8)) delete j.emas;
     Object.assign(cfg, j);
   }catch(_){}
 }
@@ -320,15 +340,14 @@ function reflectSettings(){
   $("cbC").checked = cfg.cb;
   $("optC").checked = cfg.opt; $("pRulesC").checked = cfg.pRules;
   $("qtyIn").value = cfg.qty;
-  $("ema1C").checked = cfg.ema1; $("ema2C").checked = cfg.ema2;
-  $("e1In").value = cfg.e1; $("e2In").value = cfg.e2;
+  for(let i=0;i<8;i++){ $("eOn"+i).checked = cfg.emas[i].on; $("eP"+i).value = cfg.emas[i].p; }
   $("volC").checked = cfg.vol; $("lvlC").checked = cfg.lvls;
   $("r1545C").checked = cfg.r1545; $("structC").checked = cfg.struct;
   $("lvlIn").value = cfg.custom.join("\n");
   document.querySelectorAll(".chip").forEach(x=>x.classList.toggle("on", x.dataset.sym===sym));
 }
 
-/* =============== 0DTE option pricing (Black-Scholes, r=0) =============== */
+/* =============== 0DTE option pricing =============== */
 function nCdf(x){
   const t=1/(1+0.2316419*Math.abs(x)), d=0.3989423*Math.exp(-x*x/2);
   const p=d*t*(0.3193815+t*(-0.3565638+t*(1.781478+t*(-1.821256+t*1.330274))));
@@ -354,7 +373,49 @@ function optPrem(S){
   return Math.max(bsPrice(S, pos.strike, minsToClose(), pos.iv, pos.call), 0.01);
 }
 
-/* =============== synthetic data generator (fallback) =============== */
+/* =============== EMA engine =============== */
+function emaOver(closes, p){
+  let v=null; const k=2/(p+1);
+  for(const c of closes) v = v==null ? c : v + (c-v)*k;
+  return v;
+}
+function buildEmas(){
+  emaLive = [];
+  cfg.emas.forEach((e,i)=>{
+    if(!e.on || e.tf==="D") return;
+    const warm = e.tf===5 ? (D.w5||[]) : e.tf===15 ? (D.w15||[]) : (D.w1||[]);
+    const st = { p:e.p, tf:e.tf, slot:i, lbl:e.p+"·"+e.tf+"m",
+                 k:2/(e.p+1), val:emaOver(warm, e.p), series:[] };
+    emaLive.push(st);
+  });
+  // replay any already-completed session bars (settings change mid-session)
+  done.forEach((b,bi)=>{
+    emaLive.forEach(st=>{
+      if((bi+1)%st.tf===0) st.val = st.val==null ? b.c : st.val + (b.c-st.val)*st.k;
+      st.series.push(st.val);
+    });
+  });
+  // daily EMA level lines
+  dailyEmaLines = [];
+  const dc = dailyBySym[sym];
+  if(dc && dc.length && D.date){
+    const closes = dc.filter(r=>r.d < D.date).map(r=>r.c);
+    cfg.emas.forEach((e,i)=>{
+      if(!e.on || e.tf!=="D") return;
+      if(closes.length < Math.min(e.p, 30)) return;
+      const v = emaOver(closes, e.p);
+      if(v!=null) dailyEmaLines.push({lbl:"D"+e.p+" EMA", val:+v.toFixed(2), slot:i});
+    });
+  }
+}
+function emaOnBarClose(c){
+  emaLive.forEach(st=>{
+    if((barIdx+1)%st.tf===0) st.val = st.val==null ? c : st.val + (c-st.val)*st.k;
+    st.series.push(st.val);
+  });
+}
+
+/* =============== synthetic data (fallback) =============== */
 function genDay(startPx){
   const baseSig = startPx*0.00019;
   function series(n, px, volScale, tod){
@@ -377,10 +438,20 @@ function genDay(startPx){
     }
     return out;
   }
-  const prior = series(390, startPx, 1.0, i=>570+i);
+  // 3 hidden warm-up days + prior day + premarket + session
+  let px = startPx, warmBars=[];
+  for(let d=0; d<3; d++){
+    const w = series(390, px, 1.0, i=>570+i);
+    warmBars = warmBars.concat(w);
+    px = w[w.length-1].c + (rnd()-0.5)*startPx*0.003;
+  }
+  const prior = series(390, px, 1.0, i=>570+i);
   const pre   = series(150, prior[prior.length-1].c + (rnd()-0.5)*startPx*0.0026, 0.45, null);
   const rth   = series(390, pre[pre.length-1].c, 1.0, i=>570+i);
-  return {prior, pre, rth};
+  const warmAll = warmBars.concat(prior, pre);
+  const aggC = (bars,T)=>{ const o=[]; for(let i=T-1;i<bars.length;i+=T) o.push(bars[i].c); return o; };
+  return {prior, pre, rth, date:null,
+          w1:warmAll.map(b=>b.c), w5:aggC(warmAll,5), w15:aggC(warmAll,15)};
 }
 
 /* =============== levels =============== */
@@ -397,7 +468,7 @@ function computeLevels(){
   lv.ORH = null; lv.ORL = null;
 }
 
-/* =============== tick path for one candle =============== */
+/* =============== tick path =============== */
 function buildTicks(bar){
   const up = bar.c >= bar.o;
   const first = (up ? (rnd()<0.72?bar.l:bar.h) : (rnd()<0.72?bar.h:bar.l));
@@ -432,20 +503,20 @@ function newSession(){
   }
   computeLevels();
   done=[]; forming=null; barIdx=0; tickIdx=0; ticks=[];
-  ema1v=[]; ema2v=[]; price=null; prevPrice=null; dayOver=false;
+  price=null; prevPrice=null; dayOver=false;
   pos=null; pend=null; ordMode=false; ordPx=null; sessLv=[];
   realized=0; balance=10000; tradeLog=[]; violCount=0;
   viewOfs=0;
   sessIV = estIV();
+  buildEmas();
   phase = "setup";
   const tag=$("sessionTag");
-  tag.textContent = sym + " • 1-Min • Session " + sessionNum + (real? " • REAL DATA • date hidden" : " • ⚠ SIMULATED DATA");
+  tag.textContent = sym + " • Session " + sessionNum + (real? " • REAL DATA • date hidden" : " • ⚠ SIMULATED DATA");
   tag.style.color = real ? "var(--green)" : "var(--amber)";
   hideBanner(); updateHUD(); syncBrkt(); renderActions();
   paused=false; $("pauseB").textContent="⏸";
   draw();
 }
-
 function startSession(){
   if(phase!=="setup") return;
   phase="live"; viewOfs=0;
@@ -453,7 +524,6 @@ function startSession(){
   scheduleTick();
   renderActions(); updateHUD(); draw();
 }
-
 function startCandle(){
   if(barIdx >= D.rth.length){ endDay("Market close — session over"); return; }
   const bar = D.rth[barIdx];
@@ -461,7 +531,6 @@ function startCandle(){
   tickIdx = 0;
   forming = {o:bar.o, h:bar.o, l:bar.o, c:bar.o, v:0};
 }
-
 function stepTick(){
   if(dayOver || !forming || phase!=="live") return;
   const bar = D.rth[barIdx];
@@ -471,11 +540,10 @@ function stepTick(){
   forming.h = Math.max(forming.h, price);
   forming.l = Math.min(forming.l, price);
   forming.v = Math.round(bar.v * (tickIdx+1)/TICKS);
-  // resting order fill
   if(pend && !pos){
     if(price===pend.px || (prevPrice!=null && ((prevPrice<pend.px&&price>=pend.px)||(prevPrice>pend.px&&price<=pend.px)))){
       const o=pend; pend=null;
-      openPos(o.dir, o.px);
+      openPos(o.dir, o.px, o.sl, o.tp);
       showBanner("Order filled at "+o.px.toFixed(2),"warn");
       renderActions();
     }
@@ -489,14 +557,11 @@ function stepTick(){
   }
   updateHUD();
 }
-
 function finalizeCandle(){
   const bar = D.rth[barIdx];
   const fin = {o:bar.o,h:bar.h,l:bar.l,c:bar.c,v:bar.v};
   done.push(fin);
-  const c = fin.c;
-  ema1v.push(ema1v.length ? ema1v[ema1v.length-1] + (c-ema1v[ema1v.length-1])*(2/(cfg.e1+1)) : c);
-  ema2v.push(ema2v.length ? ema2v[ema2v.length-1] + (c-ema2v[ema2v.length-1])*(2/(cfg.e2+1)) : c);
+  emaOnBarClose(fin.c);
   if(done.length===1){ lv.ORH=fin.h; lv.ORL=fin.l; }
   if(cfg.struct && pos && barIdx > pos.entryBarIdx){
     if(pos.entryLow==null && done[pos.entryBarIdx]){ pos.entryLow=done[pos.entryBarIdx].l; pos.entryHigh=done[pos.entryBarIdx].h; }
@@ -514,18 +579,7 @@ function finalizeCandle(){
   forming=null;
   startCandle();
 }
-
-function recomputeEmas(){
-  ema1v=[]; ema2v=[];
-  done.forEach(b=>{
-    const c=b.c;
-    ema1v.push(ema1v.length ? ema1v[ema1v.length-1] + (c-ema1v[ema1v.length-1])*(2/(cfg.e1+1)) : c);
-    ema2v.push(ema2v.length ? ema2v[ema2v.length-1] + (c-ema2v[ema2v.length-1])*(2/(cfg.e2+1)) : c);
-  });
-}
-
 function minuteOfDay(){ return 570 + barIdx; }
-
 function endDay(msg){
   dayOver=true; stopTimer();
   if(pos) closePos("Market close");
@@ -550,13 +604,13 @@ function runFast(nTicks){
 
 /* =============== trading =============== */
 function tradingOptions(){ return inst().opt && cfg.opt; }
-function openPos(dir, fillPx){
+function openPos(dir, fillPx, slIn, tpIn){
   if(pos || fillPx==null || dayOver) return;
   const r0 = inst().r0;
   pos = {
     dir, entry:fillPx, qty:cfg.qty,
-    sl:snap(fillPx - dir*r0),
-    tp:snap(fillPx + dir*2*r0),
+    sl: slIn!=null ? snap(slIn) : snap(fillPx - dir*r0),
+    tp: tpIn!=null ? snap(tpIn) : snap(fillPx + dir*2*r0),
     r:r0, entryBarIdx:barIdx,
     entryLow: forming?forming.l:null, entryHigh: forming?forming.h:null,
     structFlag:false, softWarned:false, openTime:timeStr(), opt:false
@@ -611,7 +665,7 @@ function unrealized(){
   return (price-pos.entry)*pos.dir*inst().mult*pos.qty;
 }
 
-/* =============== order entry (on-chart, TradingView style) =============== */
+/* =============== order entry =============== */
 function placeOrder(dir){
   if(pos || dayOver || price==null) return;
   const px = snap(ordPx==null ? price : ordPx);
@@ -619,8 +673,9 @@ function placeOrder(dir){
   if(Math.abs(px - price) <= inst().tick + 1e-9){
     openPos(dir, price);
   } else {
-    pend = {dir, px};
-    showBanner("Order resting at "+px.toFixed(2)+" — fills when price touches it","warn");
+    const r0 = inst().r0;
+    pend = {dir, px, sl:snap(px - dir*r0), tp:snap(px + dir*2*r0)};
+    showBanner("Order resting at "+px.toFixed(2)+" with SL/TP bracket — drag any of the three lines","warn");
   }
   renderActions(); draw();
 }
@@ -668,7 +723,9 @@ function updateHint(){
   if(phase==="setup"){
     h.textContent = "Mark your levels: pan/zoom the prior day & premarket, ＋ ADD LEVEL drops a line (drag to place, drag off-chart to delete), then START SESSION.";
   } else if(ordMode){
-    h.textContent = "Drag the entry line to your price, then BUY or SELL. At the current price it fills instantly; away from it, the order rests until touched.";
+    h.textContent = "Drag the entry line to your price (touch away from it to pan), then BUY or SELL. At market it fills instantly; away from it, the order rests with an SL/TP bracket.";
+  } else if(pend){
+    h.textContent = "Order resting — drag the ORDER, SL or TP lines to adjust the bracket. ✕ cancels. Fills (with its bracket) when price touches the entry.";
   } else if(pos){
     h.style.display="none"; return;
   } else {
@@ -761,7 +818,6 @@ function resize(){
 }
 window.addEventListener("resize", resize);
 
-/* touch: order line > setup levels > SL/TP > pan */
 let dragX=null, dragOfs=0;
 const canvasY = e => e.clientY - cv.getBoundingClientRect().top;
 const priceAtY = y => lastV ? lastV.lo + (1 - y/lastV.chH)*(lastV.hi-lastV.lo) : null;
@@ -770,7 +826,16 @@ const yAtPrice = p => lastV.chH - (p-lastV.lo)/(lastV.hi-lastV.lo)*lastV.chH;
 cv.addEventListener("pointerdown", e=>{
   try{cv.setPointerCapture(e.pointerId);}catch(_){}
   const y = canvasY(e);
-  if(ordMode && lastV){ dragLine="ord"; return; }
+  if(ordMode && lastV){
+    if(Math.abs(y - yAtPrice(ordPx)) < 32){ dragLine="ord"; return; }
+    dragX=e.clientX; dragOfs=viewOfs; return;   // away from the line = pan
+  }
+  if(phase==="live" && pend && !pos && lastV){
+    const cands=[["opx",pend.px],["osl",pend.sl],["otp",pend.tp]];
+    let bn=null, bd=24;
+    cands.forEach(([k,p])=>{ const d=Math.abs(y-yAtPrice(p)); if(d<bd){bd=d;bn=k;} });
+    if(bn){ dragLine=bn; return; }
+  }
   if(phase==="setup" && lastV && sessLv.length){
     let bi=-1, bd=28;
     sessLv.forEach((p,i)=>{ const d=Math.abs(y-yAtPrice(p)); if(d<bd){bd=d;bi=i;} });
@@ -786,6 +851,20 @@ cv.addEventListener("pointermove", e=>{
   const y = canvasY(e);
   if(dragLine==="ord" && lastV){
     ordPx = snap(clamp(priceAtY(y), lastV.lo, lastV.hi));
+    draw(); return;
+  }
+  if((dragLine==="opx"||dragLine==="osl"||dragLine==="otp") && pend && lastV){
+    const p = snap(clamp(priceAtY(y), lastV.lo, lastV.hi));
+    const t = inst().tick;
+    if(dragLine==="opx"){
+      const dd = p - pend.px;
+      pend.px = p; pend.sl = snap(pend.sl+dd); pend.tp = snap(pend.tp+dd);
+      const cx=$("cxOB"); if(cx) cx.textContent="✕ ORDER @ "+pend.px.toFixed(2);
+    } else if(dragLine==="osl"){
+      pend.sl = pend.dir===1 ? Math.min(p, snap(pend.px-t)) : Math.max(p, snap(pend.px+t));
+    } else {
+      pend.tp = pend.dir===1 ? Math.max(p, snap(pend.px+t)) : Math.min(p, snap(pend.px-t));
+    }
     draw(); return;
   }
   if(dragLvIdx>=0 && lastV){
@@ -812,7 +891,7 @@ cv.addEventListener("pointermove", e=>{
 });
 const endDrag = ()=>{
   if(dragLvIdx>=0 && lastV && dragLastY!=null && (dragLastY<12 || dragLastY>lastV.chH-6)){
-    sessLv.splice(dragLvIdx,1);           // dragged off the chart = delete
+    sessLv.splice(dragLvIdx,1);
   }
   if(dragLine==="sl"||dragLine==="tp") checkStops();
   dragLine=null; dragLvIdx=-1; dragLastY=null; dragX=null;
@@ -823,6 +902,39 @@ cv.addEventListener("pointercancel", endDrag);
 $("liveB").addEventListener("click", ()=>{ viewOfs=0; draw(); });
 $("zoomInB").addEventListener("click", ()=>{ viewN=clamp(Math.round(viewN/1.4),40,260); draw(); });
 $("zoomOutB").addEventListener("click", ()=>{ viewN=clamp(Math.round(viewN*1.4),40,260); draw(); });
+document.querySelectorAll(".tfc").forEach(el=>{
+  el.addEventListener("click", ()=>{
+    document.querySelectorAll(".tfc").forEach(x=>x.classList.remove("on"));
+    el.classList.add("on");
+    dispTf = +el.dataset.tf;
+    viewOfs = 0;
+    draw();
+  });
+});
+
+/* aggregate 1m bars into display-timeframe buckets.
+   "start": aligned to segment start (prior day & session open at :30, clock-aligned)
+   "end":   aligned to segment end (premarket, so its last bucket closes at 9:30) */
+function aggBars(bars, T, m0, flags, mode){
+  if(T===1) return bars.map((b,i)=>({o:b.o,h:b.h,l:b.l,c:b.c,v:b.v, m:m0+i, ...flags}));
+  const out=[];
+  let i0 = 0;
+  if(mode==="end"){
+    const off = bars.length % T;
+    if(off>0){
+      const g = bars.slice(0,off);
+      out.push({o:g[0].o, h:Math.max(...g.map(b=>b.h)), l:Math.min(...g.map(b=>b.l)),
+                c:g[g.length-1].c, v:g.reduce((a,b)=>a+(b.v||0),0), m:m0, ...flags});
+      i0 = off;
+    }
+  }
+  for(let i=i0;i<bars.length;i+=T){
+    const g = bars.slice(i,i+T);
+    out.push({o:g[0].o, h:Math.max(...g.map(b=>b.h)), l:Math.min(...g.map(b=>b.l)),
+              c:g[g.length-1].c, v:g.reduce((a,b)=>a+(b.v||0),0), m:m0+i, ...flags});
+  }
+  return out;
+}
 
 function draw(){
   const W=cv.width/devicePixelRatio, H=cv.height/devicePixelRatio;
@@ -831,12 +943,16 @@ function draw(){
   ctx.clearRect(0,0,W,H);
   const axW=52, volH = cfg.vol ? H*0.16 : 0;
   const chW=W-axW, chH=H-volH-6;
+  const T = dispTf;
 
-  const prevBars = D.prior.map(b=>({...b, prev:true}));
-  const preBars  = D.pre.map(b=>({...b, pre:true}));
-  const sess = done.map(b=>({...b})); if(forming) sess.push({...forming, live:true});
-  const all = prevBars.concat(preBars, sess);
-  const sessStart = prevBars.length + preBars.length;
+  const sess1m = done.concat(forming?[forming]:[]);
+  const prevAgg = aggBars(D.prior, T, 570, {prev:true}, "start");
+  const preAgg  = aggBars(D.pre,  T, 570 - D.pre.length, {pre:true}, "end");
+  const sessAgg = aggBars(sess1m, T, 570, {}, "start");
+  if(sessAgg.length && (forming || sess1m.length % T !== 0)) sessAgg[sessAgg.length-1].live=true;
+  const all = prevAgg.concat(preAgg, sessAgg);
+  const sessStart = prevAgg.length + preAgg.length;
+
   const NV = viewN;
   const maxOfs = Math.max(0, all.length - NV);
   if(viewOfs > maxOfs) viewOfs = maxOfs;
@@ -847,16 +963,12 @@ function draw(){
   const vis = all.slice(start, end);
   if(!vis.length) return;
   const bw = chW/NV;
-  const offS = sessStart - start;
-  const mOf = idx => idx < prevBars.length ? 570 + idx
-             : idx < sessStart ? 570 - (sessStart - idx)
-             : 570 + (idx - sessStart);
 
   // y-range
   let lo=Infinity, hi=-Infinity;
   vis.forEach(b=>{ lo=Math.min(lo,b.l); hi=Math.max(hi,b.h); });
   if(pos){ lo=Math.min(lo,pos.sl,pos.tp); hi=Math.max(hi,pos.sl,pos.tp); }
-  if(pend){ lo=Math.min(lo,pend.px); hi=Math.max(hi,pend.px); }
+  if(pend){ lo=Math.min(lo,pend.px,pend.sl,pend.tp); hi=Math.max(hi,pend.px,pend.sl,pend.tp); }
   const pad=(hi-lo)*0.07||1; lo-=pad; hi+=pad;
   const Y=p=>chH-(p-lo)/(hi-lo)*chH;
   lastV = {lo, hi, chH};
@@ -870,39 +982,42 @@ function draw(){
     ctx.fillText(p.toFixed(2), chW+4, y+3);
   }
 
-  // session dividers + time axis
+  // session divider + time axis
+  const cadence = T===1?15 : T===5?30 : 60;
+  const cadPrior = T===1?60 : T===5?60 : 120;
   for(let vi=0; vi<vis.length; vi++){
-    const idx = start + vi, x = vi*bw + bw/2;
-    if(idx === prevBars.length && idx>0){
+    const idx = start + vi, x = vi*bw + bw/2, b = vis[vi];
+    if(idx === prevAgg.length && idx>0){
       ctx.strokeStyle=P.div; ctx.setLineDash([3,4]);
       ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,chH); ctx.stroke(); ctx.setLineDash([]);
       ctx.fillStyle=P.ax; ctx.fillText("‹ prev day", x+3, 12);
     }
-    const m = mOf(idx), prior = idx < prevBars.length;
-    if(m % (prior?60:15) !== 0) continue;
+    const m = b.m;
+    if(m % (b.prev?cadPrior:cadence) !== 0) continue;
     ctx.strokeStyle=P.grid;
     ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,chH); ctx.stroke();
-    const hh=Math.floor(m/60), mm=m%60;
-    ctx.fillStyle = (idx===sessStart) ? P.axHi : prior ? P.axDim : P.ax;
+    const hh=Math.floor(m/60), mm=((m%60)+60)%60;
+    ctx.fillStyle = (idx===sessStart) ? P.axHi : b.prev ? P.axDim : P.ax;
     ctx.fillText(String(hh).padStart(2,"0")+":"+String(mm).padStart(2,"0"), x-14, H-3);
   }
 
-  // levels (auto + standing + session-marked)
+  // levels (auto + standing + daily EMAs)
   if(cfg.lvls){
     const pm = inst().fut ? "ON" : "PM";
     const items=[["PDH",lv.PDH,P.gold],["PDL",lv.PDL,P.gold],[pm+"H",lv.PMH,P.pmcol],
                  [pm+"L",lv.PML,P.pmcol],["OR H",lv.ORH,P.orcol],["OR L",lv.ORL,P.orcol]];
-    cfg.custom.forEach(p=>items.push(["S/R",p,P.lvl]));
-    items.forEach(([name,p,col])=>{
+    cfg.custom.forEach(p=>items.push(["S/R",p,P.lvl,1]));
+    dailyEmaLines.forEach(d=>{ const s=emaStyle(d.slot); items.push([d.lbl, d.val, s.col, s.w]); });
+    items.forEach(([name,p,col,w])=>{
       if(p==null||p<lo||p>hi) return;
       const y=Y(p);
-      ctx.strokeStyle=col; ctx.setLineDash([5,4]); ctx.globalAlpha=0.65;
+      ctx.strokeStyle=col; ctx.lineWidth=w||1; ctx.setLineDash([5,4]); ctx.globalAlpha=0.65;
       ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(chW,y); ctx.stroke();
-      ctx.setLineDash([]); ctx.globalAlpha=1;
+      ctx.setLineDash([]); ctx.globalAlpha=1; ctx.lineWidth=1;
       ctx.fillStyle=col; ctx.fillText(name+" "+p.toFixed(2), 6, y-3);
     });
   }
-  // session-marked levels (always shown; draggable in setup)
+  // session-marked levels
   sessLv.forEach(p=>{
     if(p<lo||p>hi) return;
     const y=Y(p);
@@ -938,25 +1053,32 @@ function draw(){
   });
   ctx.globalAlpha=1;
 
-  // EMAs
-  function plotEma(arr,col){
-    if(arr.length<2) return;
-    ctx.strokeStyle=col; ctx.lineWidth=1.5; ctx.beginPath();
-    let started=false;
-    for(let i=0;i<arr.length;i++){
-      const vi = offS + i;
-      if(vi<0) continue;
-      if(vi>=vis.length) break;
-      const x=vi*bw+bw/2, y=Y(arr[i]);
+  // intraday EMAs: value per display bucket = engine value at bucket's last completed 1m bar
+  emaLive.forEach(st=>{
+    if(!st.series.length) return;
+    const sty = emaStyle(st.slot);
+    ctx.strokeStyle=sty.col; ctx.lineWidth=sty.w; ctx.beginPath();
+    let started=false, lastXY=null;
+    for(let j=0;j<sessAgg.length;j++){
+      const g = sessStart + j;
+      const vi = g - start;
+      if(vi<0 || vi>=vis.length) continue;
+      const si = Math.min((j+1)*T-1, st.series.length-1);
+      const v = st.series[si];
+      if(v==null) continue;
+      const x=vi*bw+bw/2, y=Y(v);
+      if(y<-20||y>chH+20) continue;
       if(!started){ ctx.moveTo(x,y); started=true; } else ctx.lineTo(x,y);
+      lastXY=[x,y];
     }
-    ctx.stroke();
-  }
-  if(cfg.ema1) plotEma(ema1v,P.e1col);
-  if(cfg.ema2) plotEma(ema2v,P.e2col);
+    ctx.stroke(); ctx.lineWidth=1;
+    if(lastXY){
+      ctx.fillStyle=sty.col; ctx.fillText(st.lbl, Math.min(lastXY[0]+5, chW-46), lastXY[1]-3);
+    }
+  });
 
-  // position / order lines with drag pills
-  function tag(p,col,nm,drag){
+  // position / order lines
+  function tagLine(p,col,nm,drag){
     if(p<lo||p>hi) return;
     const y=Y(p);
     ctx.strokeStyle=col; ctx.setLineDash([2,3]); ctx.lineWidth=drag?1.6:1.1;
@@ -972,12 +1094,16 @@ function draw(){
     ctx.font="10px system-ui";
   }
   if(pos){
-    tag(pos.entry,P.entry,"Entry",false);
-    tag(pos.sl,P.dn,"SL",true);
-    tag(pos.tp,P.up,"TP",true);
+    tagLine(pos.entry,P.entry,"Entry",false);
+    tagLine(pos.sl,P.dn,"SL",true);
+    tagLine(pos.tp,P.up,"TP",true);
   }
-  if(pend) tag(pend.px,P.ord,"ORDER",false);
-  if(ordMode && ordPx!=null) tag(ordPx,P.ord,"Entry",true);
+  if(pend){
+    tagLine(pend.px,P.ord,"ORDER",true);
+    tagLine(pend.sl,P.dn,"SL",true);
+    tagLine(pend.tp,P.up,"TP",true);
+  }
+  if(ordMode && ordPx!=null) tagLine(ordPx,P.ord,"Entry",true);
 
   // last price marker
   if(price!=null){
@@ -996,7 +1122,7 @@ function niceStep(raw){
   return (n<1.5?1:n<3.5?2.5:n<7.5?5:10)*p;
 }
 
-/* =============== stats / end of day =============== */
+/* =============== stats =============== */
 function showStats(title){
   $("eodTitle").textContent = title||"Session complete";
   const n=tradeLog.length, wins=tradeLog.filter(t=>t.pnl>0), losses=tradeLog.filter(t=>t.pnl<=0);
@@ -1041,25 +1167,40 @@ function parseImport(text, name){
   rows = rows.filter(r=>r.t && isFinite(r.o));
   if(rows.length<100) return {err:"Parsed only "+rows.length+" bars — need at least a full day of 1m data."};
   rows.sort((a,b)=>a.t-b.t);
-  const fmtD=new Intl.DateTimeFormat("en-US",{timeZone:"America/New_York",year:"numeric",month:"2-digit",day:"2-digit"});
+  const fmtD=new Intl.DateTimeFormat("en-CA",{timeZone:"America/New_York",year:"numeric",month:"2-digit",day:"2-digit"});
   const fmtT=new Intl.DateTimeFormat("en-US",{timeZone:"America/New_York",hour:"2-digit",minute:"2-digit",hour12:false});
   const byDay={};
   rows.forEach(r=>{
     const d=new Date(r.t*1000);
-    const day=fmtD.format(d);
+    const day=fmtD.format(d);               // YYYY-MM-DD, sorts correctly
     const [hh,mm]=fmtT.format(d).split(":").map(Number);
     const mins=hh*60+mm;
-    (byDay[day]=byDay[day]||{pre:[],rth:[]});
-    const bar={o:r.o,h:r.h,l:r.l,c:r.c,v:r.v};
-    if(mins>=570 && mins<960) byDay[day].rth.push(bar);
-    else if(mins<570) byDay[day].pre.push(bar);
+    (byDay[day]=byDay[day]||{pre:[],rth:[],all:[]});
+    const bar={o:r.o,h:r.h,l:r.l,c:r.c,v:r.v,t:r.t};
+    if(mins>=570 && mins<960){ byDay[day].rth.push(bar); byDay[day].all.push(bar); }
+    else if(mins<570){ byDay[day].pre.push(bar); byDay[day].all.push(bar); }
   });
   const dates=Object.keys(byDay).sort();
+  const aggC=(bars,T)=>{ // closes at epoch-aligned T-minute boundaries
+    const out=[]; let bucket=null, lastC=null;
+    bars.forEach(b=>{
+      const k=Math.floor(b.t/(T*60));
+      if(bucket!==null && k!==bucket && lastC!=null) out.push(lastC);
+      bucket=k; lastC=b.c;
+    });
+    if(lastC!=null) out.push(lastC);
+    return out;
+  };
   const days=[];
   for(let i=1;i<dates.length;i++){
     const cur=byDay[dates[i]], prev=byDay[dates[i-1]];
-    if(cur.rth.length>=300 && prev.rth.length>=300)
-      days.push({prior:prev.rth, pre:cur.pre, rth:cur.rth});
+    if(cur.rth.length>=300 && prev.rth.length>=300){
+      let warm=[];
+      for(let k=Math.max(0,i-10);k<i;k++) warm = warm.concat(byDay[dates[k]].all);
+      warm = warm.concat(cur.pre);
+      days.push({date:dates[i], prior:prev.rth, pre:cur.pre, rth:cur.rth,
+                 w1:warm.map(b=>b.c), w5:aggC(warm,5), w15:aggC(warm,15)});
+    }
   }
   if(!days.length) return {err:"No playable days found (need consecutive days with full RTH data)."};
   return {days};
@@ -1070,6 +1211,17 @@ function normTime(t){
   const n=+t;
   if(isFinite(n)) return n>1e12? Math.round(n/1000): Math.round(n);
   const d=new Date(t); return isNaN(d)? null : Math.round(d.getTime()/1000);
+}
+function parseDaily(text){
+  try{
+    const j=JSON.parse(text);
+    const arr=Array.isArray(j)?j:(j.bars||j.data||[]);
+    const fmtD=new Intl.DateTimeFormat("en-CA",{timeZone:"America/New_York",year:"numeric",month:"2-digit",day:"2-digit"});
+    return arr.map(r=>{
+      const t=normTime(r.time??r.t); const c=+(r.close??r.c);
+      return (t&&isFinite(c)) ? {d:fmtD.format(new Date(t*1000)), c} : null;
+    }).filter(Boolean).sort((a,b)=>a.d<b.d?-1:1);
+  }catch(_){ return null; }
 }
 
 /* =============== wiring =============== */
@@ -1105,13 +1257,14 @@ function applySettings(){
   cfg.theme = $("lightC").checked ? "light" : "dark";
   cfg.cb = $("cbC").checked;
   cfg.opt=$("optC").checked; cfg.pRules=$("pRulesC").checked;
-  cfg.ema1=$("ema1C").checked; cfg.ema2=$("ema2C").checked;
-  cfg.e1 = clamp(Math.round(+$("e1In").value)||9, 2, 400);
-  cfg.e2 = clamp(Math.round(+$("e2In").value)||21, 2, 400);
+  for(let i=0;i<8;i++){
+    cfg.emas[i].on = $("eOn"+i).checked;
+    cfg.emas[i].p = clamp(Math.round(+$("eP"+i).value)||EMA_SLOTS[i].p, 2, 400);
+  }
   cfg.vol=$("volC").checked; cfg.lvls=$("lvlC").checked;
   cfg.r1545=$("r1545C").checked; cfg.struct=$("structC").checked;
   cfg.custom = $("lvlIn").value.split(/\n/).map(s=>+s.trim()).filter(v=>isFinite(v)&&v>0);
-  applyTheme(); recomputeEmas(); saveCfg();
+  applyTheme(); buildEmas(); saveCfg();
   return pendingSym !== sym;
 }
 $("applyB").addEventListener("click", ()=>{
@@ -1157,9 +1310,17 @@ async function loadRemoteData(){
   for(const s of ["SPY","QQQ","ES","NQ"]){
     try{
       const r = await fetch("data/"+s+"_1m.json", {cache:"no-cache"});
-      if(!r.ok) continue;
-      const res = parseImport(await r.text(), s);
-      if(!res.err && res.days.length){ importedBySym[s]=res.days; got++; }
+      if(r.ok){
+        const res = parseImport(await r.text(), s);
+        if(!res.err && res.days.length){ importedBySym[s]=res.days; got++; }
+      }
+    }catch(_){}
+    try{
+      const rd = await fetch("data/"+s+"_1d.json", {cache:"no-cache"});
+      if(rd.ok){
+        const dd = parseDaily(await rd.text());
+        if(dd && dd.length) dailyBySym[s]=dd;
+      }
     }catch(_){}
   }
   if(!got) return;
