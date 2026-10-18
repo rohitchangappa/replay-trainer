@@ -5,16 +5,23 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="theme-color" content="#101720">
+<meta name="theme-color" content="#eef1f4">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon-192.png">
 <title>Replay Trainer</title>
 <style>
   :root{
     --bg:#101720; --panel:#17202b; --panel2:#1c2733; --line:#26313f;
-    --text:#d8e0ea; --muted:#7a8794; --dim:#4a5663;
+    --text:#d8e0ea; --muted:#7a8794; --dim:#4a5663; --chartbg:#0d131b;
     --green:#2ebd85; --green-dk:#1f8a61; --red:#f6465d; --red-dk:#b8323f;
-    --amber:#e8a33d; --blue:#5b8dbf;
+    --amber:#e8a33d; --blue:#5b8dbf; --accent:#6d6af0;
+  }
+  body.light{
+    --bg:#eef1f4; --panel:#ffffff; --panel2:#e8ecf0; --line:#d2d9e0;
+    --text:#1c2733; --muted:#5a6673; --dim:#9aa5b0; --chartbg:#ffffff;
+  }
+  body.cb{
+    --green:#2f80d8; --green-dk:#1f5fa8; --red:#e8821e; --red-dk:#b35f0e;
   }
   *{box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent;}
   html,body{height:100%; overflow:hidden;}
@@ -36,7 +43,7 @@
         border-radius:8px; color:var(--muted); display:flex; align-items:center; justify-content:center;}
   /* ---------- chart ---------- */
   #chartWrap{flex:1; position:relative; margin:6px 10px; min-height:120px;}
-  canvas{position:absolute; inset:0; width:100%; height:100%; border:1px solid var(--line); border-radius:8px; background:#0d131b; touch-action:none;}
+  canvas{position:absolute; inset:0; width:100%; height:100%; border:1px solid var(--line); border-radius:8px; background:var(--chartbg); touch-action:none;}
   #banner{
     position:absolute; top:8px; left:50%; transform:translateX(-50%);
     background:var(--red-dk); color:#fff; font-size:13px; font-weight:600;
@@ -44,19 +51,18 @@
   }
   #banner.warn{background:#7a5a1e; color:#ffd88a;}
   #sessionTag{position:absolute; top:8px; left:10px; font-size:12px; font-weight:600; color:var(--muted); z-index:4;
-              background:rgba(13,19,27,.75); padding:2px 6px; border-radius:4px;}
-  #speedCap{font-size:11px; color:var(--dim); padding:0 12px 2px;}
+              background:var(--panel); border:1px solid var(--line); padding:2px 6px; border-radius:4px; opacity:.92;}
+  #chartBtns{position:absolute; top:8px; right:10px; display:flex; gap:6px; z-index:5;}
+  .cbtn{padding:4px 12px; background:var(--panel); border:1px solid var(--line); border-radius:6px;
+        color:var(--muted); font-size:14px; font-weight:700; opacity:.92;}
+  #liveB{display:none; color:var(--amber); border-color:var(--amber);}
   /* ---------- speed row ---------- */
+  #speedCap{font-size:11px; color:var(--dim); padding:0 12px 2px;}
   #speedRow{display:flex; gap:6px; padding:0 10px 6px;}
   .sbtn{flex:1; padding:9px 0; background:var(--panel); border:1px solid var(--line); border-radius:8px;
         color:var(--muted); font-size:13px; font-weight:600; text-align:center;}
   .sbtn.on{background:var(--panel2); color:var(--text); border-color:var(--blue);}
-  /* ---------- chart pan/zoom buttons ---------- */
-  #chartBtns{position:absolute; top:8px; right:10px; display:flex; gap:6px; z-index:5;}
-  .cbtn{padding:4px 12px; background:rgba(23,32,43,.88); border:1px solid var(--line); border-radius:6px;
-        color:var(--muted); font-size:14px; font-weight:700;}
-  #liveB{display:none; color:var(--amber); border-color:var(--amber);}
-  /* ---------- SL/TP panel (always visible) ---------- */
+  /* ---------- SL/TP panel ---------- */
   #brktHint{font-size:11px; color:var(--dim); padding:0 12px 3px;}
   #brkt{display:flex; padding:0 10px 6px; gap:6px;}
   #brkt.flat{opacity:.45;}
@@ -70,22 +76,30 @@
   .bquick{margin-top:4px; display:flex; gap:4px;}
   .qbtn{flex:1; padding:6px 0; font-size:11px; background:var(--panel2); border:1px solid var(--line);
         border-radius:6px; color:var(--muted); text-align:center;}
-  /* ---------- main buttons ---------- */
-  #btns{display:flex; gap:10px; padding:0 10px 6px;}
-  .big{flex:1; padding:18px 0; border:none; border-radius:12px; font-size:20px; font-weight:800;
-       letter-spacing:1px; color:#fff; text-align:center;}
-  #shortB{background:var(--red);} #longB{background:var(--green);}
-  .big:active{filter:brightness(1.2);}
-  .big:disabled{opacity:.35;}
-  #exitB{margin:0 10px 8px; padding:14px 0; border-radius:12px; border:1px solid var(--line);
-         background:var(--panel); color:var(--dim); font-size:16px; font-weight:700; text-align:center; letter-spacing:1px;}
-  #exitB.live{background:var(--panel2); color:var(--text); border-color:var(--amber);}
+  /* ---------- premium strip ---------- */
+  #premRow{display:none; margin:0 10px 6px; padding:7px 12px; background:var(--panel); border:1px solid var(--line);
+           border-radius:8px; font-size:13px; justify-content:space-between; align-items:center;}
+  #premRow.show{display:flex;}
+  #premChg.pos{color:var(--green);} #premChg.neg{color:var(--red);}
+  /* ---------- action row ---------- */
+  #actRow{display:flex; gap:10px; padding:0 10px 8px;}
+  .abtn{flex:1; padding:16px 0; border:none; border-radius:12px; font-size:18px; font-weight:800;
+        letter-spacing:.5px; color:#fff; text-align:center;}
+  .abtn:active{filter:brightness(1.15);}
+  .abtn:disabled{opacity:.35;}
+  .abtn.buy{background:var(--green);}
+  .abtn.sell{background:var(--red);}
+  .abtn.trade{background:var(--accent);}
+  .abtn.start{background:var(--green);}
+  .abtn.neutral{background:var(--panel2); color:var(--text); border:1px solid var(--line);}
+  .abtn.exit{background:var(--panel); color:var(--dim); border:1px solid var(--line);}
+  .abtn.exit.live{background:var(--panel2); color:var(--text); border-color:var(--amber);}
   /* ---------- overlays ---------- */
-  .overlay{position:fixed; inset:0; background:rgba(6,10,15,.82); z-index:20; display:none;
+  .overlay{position:fixed; inset:0; background:rgba(6,10,15,.72); z-index:20; display:none;
            align-items:center; justify-content:center; padding:16px;}
   .overlay.show{display:flex;}
   .card{background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:20px;
-        width:100%; max-width:460px; max-height:90vh; overflow-y:auto;}
+        width:100%; max-width:480px; max-height:90vh; overflow-y:auto;}
   .card h2{font-size:18px; margin-bottom:12px;}
   .card p{font-size:13px; color:var(--muted); line-height:1.5; margin-bottom:10px;}
   .row2{display:flex; justify-content:space-between; font-size:14px; padding:5px 0; border-bottom:1px solid var(--line);}
@@ -93,27 +107,23 @@
   .cardBtn{display:block; width:100%; margin-top:10px; padding:12px; border:none; border-radius:8px;
            background:var(--blue); color:#fff; font-size:15px; font-weight:700; text-align:center;}
   .cardBtn.ghost{background:var(--panel2); color:var(--text); border:1px solid var(--line);}
-  label.set{display:flex; justify-content:space-between; align-items:center; font-size:14px; padding:8px 0; border-bottom:1px solid var(--line);}
-  input[type=number]{width:90px; background:var(--panel2); border:1px solid var(--line); border-radius:6px;
+  label.set{display:flex; justify-content:space-between; align-items:center; gap:8px; font-size:14px; padding:8px 0; border-bottom:1px solid var(--line);}
+  label.set .pair{display:flex; align-items:center; gap:8px;}
+  input[type=number]{width:80px; background:var(--panel2); border:1px solid var(--line); border-radius:6px;
                      color:var(--text); font-size:14px; padding:6px; text-align:right;}
   input[type=checkbox]{width:20px; height:20px;}
-  textarea{width:100%; height:70px; background:var(--panel2); border:1px solid var(--line); border-radius:6px;
+  textarea{width:100%; height:60px; background:var(--panel2); border:1px solid var(--line); border-radius:6px;
            color:var(--text); font-size:12px; padding:6px; margin-top:4px;}
+  select{background:var(--panel2); border:1px solid var(--line); border-radius:6px; color:var(--text);
+         font-size:13px; padding:6px;}
   #fileIn{font-size:12px; color:var(--muted); margin-top:4px;}
   #log{font-size:12px; max-height:150px; overflow-y:auto; margin-top:8px;}
   .lrow{display:flex; justify-content:space-between; padding:3px 0; border-bottom:1px solid var(--line); color:var(--muted);}
   .lrow .w{color:var(--green);} .lrow .l{color:var(--red);}
-  /* ---------- symbol chips / premium strip ---------- */
   #symRow{display:flex; gap:6px; margin-bottom:10px;}
   .chip{flex:1; padding:10px 0; text-align:center; font-size:14px; font-weight:700; border-radius:8px;
         background:var(--panel2); border:1px solid var(--line); color:var(--muted);}
-  .chip.on{color:var(--text); border-color:var(--blue); background:#203040;}
-  #premRow{display:none; margin:0 10px 6px; padding:7px 12px; background:var(--panel); border:1px solid var(--line);
-           border-radius:8px; font-size:13px; display:none; justify-content:space-between; align-items:center;}
-  #premRow.show{display:flex;}
-  #premChg.pos{color:var(--green);} #premChg.neg{color:var(--red);}
-  select{background:var(--panel2); border:1px solid var(--line); border-radius:6px; color:var(--text);
-         font-size:13px; padding:6px;}
+  .chip.on{color:var(--text); border-color:var(--blue); background:var(--panel);}
 </style>
 </head>
 <body>
@@ -154,7 +164,7 @@
   <span><span id="premNowV">—</span> <span id="premChg">—</span></span>
 </div>
 
-<div id="brktHint">Stop-loss &amp; take-profit arm when you enter a trade — drag the SL/TP lines on the chart, fine-tune with − / +, or use Struct / Breakeven / 1R-2R-3R</div>
+<div id="brktHint"></div>
 <div id="brkt" class="flat">
   <div class="bcol">
     <div class="k">Stop loss (underlying)</div>
@@ -162,17 +172,13 @@
     <div class="bquick"><div class="qbtn" id="structB">Struct</div><div class="qbtn" id="beB">Breakeven</div></div>
   </div>
   <div class="bcol">
-    <div class="k">Take profit</div>
+    <div class="k">Take profit (underlying)</div>
     <div class="brow"><div class="adj" data-t="tp" data-d="-1">−</div><div class="bval" id="tpVal">—</div><div class="adj" data-t="tp" data-d="1">+</div></div>
     <div class="bquick"><div class="qbtn" data-r="1">1R</div><div class="qbtn" data-r="2">2R</div><div class="qbtn" data-r="3">3R</div></div>
   </div>
 </div>
 
-<div id="btns">
-  <button class="big" id="shortB">SHORT</button>
-  <button class="big" id="longB">LONG</button>
-</div>
-<div id="exitB">EXIT POSITION</div>
+<div id="actRow"></div>
 
 <!-- settings -->
 <div class="overlay" id="setOv"><div class="card">
@@ -183,18 +189,20 @@
     <div class="chip" data-sym="ES">ES</div>
     <div class="chip" data-sym="NQ">NQ</div>
   </div>
+  <label class="set">Light theme <input type="checkbox" id="lightC" checked></label>
+  <label class="set">Colorblind-friendly colors (blue up / orange down) <input type="checkbox" id="cbC"></label>
   <label class="set">Trade 0DTE options (SPY/QQQ only) <input type="checkbox" id="optC" checked></label>
   <label class="set">Quantity (contracts / shares) <input type="number" id="qtyIn" value="1" step="1" min="1"></label>
   <label class="set">Rulebook: premium stops (−15% soft / −25% floor) <input type="checkbox" id="pRulesC" checked></label>
-  <label class="set">EMA 9 <input type="checkbox" id="ema9C" checked></label>
-  <label class="set">EMA 21 <input type="checkbox" id="ema21C" checked></label>
+  <label class="set"><span>EMA 1 — show &amp; period</span><span class="pair"><input type="checkbox" id="ema1C" checked><input type="number" id="e1In" value="9" min="2" max="400"></span></label>
+  <label class="set"><span>EMA 2 — show &amp; period</span><span class="pair"><input type="checkbox" id="ema2C" checked><input type="number" id="e2In" value="21" min="2" max="400"></span></label>
   <label class="set">Volume pane <input type="checkbox" id="volC" checked></label>
   <label class="set">Levels (PDH/PDL/PMH/PML/ORB) <input type="checkbox" id="lvlC" checked></label>
   <label class="set">Rulebook: force flat 15:45 <input type="checkbox" id="r1545C" checked></label>
   <label class="set">Rulebook: structural-stop alerts <input type="checkbox" id="structC" checked></label>
-  <p style="margin-top:10px">Custom levels (one price per line — your drawn S/R):</p>
+  <p style="margin-top:10px">Standing levels (one price per line — kept across sessions; per-day levels are marked on the chart before you press START):</p>
   <textarea id="lvlIn" placeholder="574.50&#10;576.20"></textarea>
-  <p style="margin-top:10px">Real data auto-loads from the app's site (data folder in the repo) when available. Manual import below is the fallback — JSON <code>[{time,open,high,low,close,volume}]</code> or TradingView CSV. Pick the instrument, then choose the file. Sessions use a random day with the date hidden.</p>
+  <p style="margin-top:10px">Real data auto-loads from the app's site (data folder in the repo) when available. Manual import below is the fallback — JSON <code>[{time,open,high,low,close,volume}]</code> or TradingView CSV. Pick the instrument, then choose the file.</p>
   <div style="display:flex; gap:8px; align-items:center;">
     <select id="impSym"><option>SPY</option><option>QQQ</option><option>ES</option><option>NQ</option></select>
     <input type="file" id="fileIn" accept=".json,.csv,.txt">
@@ -231,22 +239,30 @@ const INST = {
 };
 let sym = "SPY";
 const inst = () => INST[sym];
-const cfg = { qty:1, opt:true, pRules:true, ema9:true, ema21:true, vol:true, lvls:true, r1545:true, struct:true, custom:[] };
+const cfg = { qty:1, opt:true, pRules:true, theme:"light", cb:false,
+              ema1:true, ema2:true, e1:9, e2:21,
+              vol:true, lvls:true, r1545:true, struct:true, custom:[] };
 let speed = 5, paused = false, tickTimer = null;
 let sessIV = 0.2;                       // annualized IV estimate for this session's 0DTE options
 let viewN = 95, viewOfs = 0;            // chart zoom (bars shown) and pan (bars back from live edge)
-let lastV = null, dragLine = null;      // last draw's price scale; which SL/TP line is being dragged
+let lastV = null;                       // last draw's price scale (for touch -> price mapping)
+let dragLine = null, dragLvIdx = -1, dragLastY = null;
+
+let phase = "setup";                    // "setup" (mark levels on pre-data) | "live" (replay running)
+let ordMode = false, ordPx = null;      // on-chart order-entry line
+let pend = null;                        // resting order {dir, px}
+let sessLv = [];                        // per-day levels marked before START
 
 let importedBySym = {};                 // sym -> days[] of real data
 let D = null;                           // active dataset {prior, pre, rth}
-let lv = {};                            // levels
+let lv = {};                            // auto levels
 let done = [];                          // completed session bars (today, RTH)
 let forming = null;                     // forming bar {o,h,l,c,v}
 let barIdx = 0, tickIdx = 0, ticks = [];
-let ema9v = [], ema21v = [];            // per completed bar
-let price = null, dayOver = false;
+let ema1v = [], ema2v = [];             // per completed bar
+let price = null, prevPrice = null, dayOver = false;
 
-let pos = null;                         // {dir:1|-1, entry, qty, sl, tp, r, entryBarIdx, entryLow, entryHigh, structFlag}
+let pos = null;
 let realized = 0, balance = 10000;
 let tradeLog = [], violCount = 0, sessionNum = 0;
 
@@ -259,6 +275,58 @@ function rnd(){ return Math.random(); }
 function gauss(){ let u=0,v=0; while(!u)u=rnd(); while(!v)v=rnd();
   return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v); }
 const snap = p => +(Math.round(p/inst().tick)*inst().tick).toFixed(2);
+
+/* =============== palette (theme + colorblind aware) =============== */
+function pal(){
+  const L = cfg.theme==="light";
+  return {
+    up:  cfg.cb ? "#2f80d8" : "#2ebd85",
+    dn:  cfg.cb ? "#e8821e" : "#f6465d",
+    grid:L ? "#e6eaee" : "#1b2530",
+    ax:  L ? "#8a94a0" : "#5a6673",
+    axDim:L? "#bcc4cc" : "#3f4a58",
+    axHi:L ? "#55606c" : "#8a97a5",
+    pill:L ? "#ffffff" : "#0d131b",
+    pxTxt:L? "#1c2733" : "#ffffff",
+    entry:L? "#303a46" : "#d8e0ea",
+    lvl: "#8a97a5",
+    gold:"#c09a3e", pmcol:L?"#4d87c7":"#6ea8d8", orcol:"#b06fd8",
+    e1col:"#a855f7", e2col:L?"#55606c":"#94a3b8",
+    div: L ? "#c3ccd5" : "#3a4654",
+    ord: "#6d6af0",
+  };
+}
+function applyTheme(){
+  document.body.classList.toggle("light", cfg.theme==="light");
+  document.body.classList.toggle("cb", !!cfg.cb);
+}
+function saveCfg(){
+  try{ localStorage.setItem("rt_cfg", JSON.stringify({
+    theme:cfg.theme, cb:cfg.cb, opt:cfg.opt, pRules:cfg.pRules, qty:cfg.qty,
+    ema1:cfg.ema1, ema2:cfg.ema2, e1:cfg.e1, e2:cfg.e2,
+    vol:cfg.vol, lvls:cfg.lvls, r1545:cfg.r1545, struct:cfg.struct, custom:cfg.custom, sym
+  })); }catch(_){}
+}
+function loadCfg(){
+  try{
+    const j = JSON.parse(localStorage.getItem("rt_cfg")||"{}");
+    if(j.sym && INST[j.sym]) sym = j.sym;
+    delete j.sym;
+    Object.assign(cfg, j);
+  }catch(_){}
+}
+function reflectSettings(){
+  $("lightC").checked = cfg.theme==="light";
+  $("cbC").checked = cfg.cb;
+  $("optC").checked = cfg.opt; $("pRulesC").checked = cfg.pRules;
+  $("qtyIn").value = cfg.qty;
+  $("ema1C").checked = cfg.ema1; $("ema2C").checked = cfg.ema2;
+  $("e1In").value = cfg.e1; $("e2In").value = cfg.e2;
+  $("volC").checked = cfg.vol; $("lvlC").checked = cfg.lvls;
+  $("r1545C").checked = cfg.r1545; $("structC").checked = cfg.struct;
+  $("lvlIn").value = cfg.custom.join("\n");
+  document.querySelectorAll(".chip").forEach(x=>x.classList.toggle("on", x.dataset.sym===sym));
+}
 
 /* =============== 0DTE option pricing (Black-Scholes, r=0) =============== */
 function nCdf(x){
@@ -273,7 +341,7 @@ function bsPrice(S,K,minsLeft,iv,call){
   return Math.max(call? S*nCdf(d1)-K*nCdf(d2) : K*nCdf(-d2)-S*nCdf(-d1), 0);
 }
 function minsToClose(){ return Math.max(390 - barIdx - tickIdx/TICKS, 0); }
-function estIV(){ // realized vol of prior-day 1m closes, with a 0DTE markup
+function estIV(){
   const cs=(D.prior||[]).map(b=>b.c);
   if(cs.length<30) return 0.2;
   let s=0,s2=0,n=0;
@@ -281,23 +349,22 @@ function estIV(){ // realized vol of prior-day 1m closes, with a 0DTE markup
   const sd=Math.sqrt(Math.max(s2/n-(s/n)*(s/n),1e-12));
   return clamp(sd*Math.sqrt(252*390)*1.3, 0.08, 0.9);
 }
-function optPrem(S){ // current option premium for the open position at underlying S
+function optPrem(S){
   if(!pos || !pos.opt) return null;
   return Math.max(bsPrice(S, pos.strike, minsToClose(), pos.iv, pos.call), 0.01);
 }
 
-/* =============== synthetic data generator =============== */
-/* Generates prior-day RTH (390 bars), premarket (150 bars 7:00-9:30), today RTH (390 bars). */
+/* =============== synthetic data generator (fallback) =============== */
 function genDay(startPx){
-  const baseSig = startPx*0.00019;      // ~0.11 at SPY 575, scales to ES/NQ price levels
-  function series(n, px, volScale, tod){ // tod: array index->minute-of-day for vol curve, or null
+  const baseSig = startPx*0.00019;
+  function series(n, px, volScale, tod){
     const out=[]; let p=px;
     let drift=0, driftLeft=0;
     for(let i=0;i<n;i++){
       if(driftLeft<=0){ driftLeft = 15+Math.floor(rnd()*60); drift = (rnd()-0.5)*baseSig*0.41; if(rnd()<0.25) drift*=2.2; }
       driftLeft--;
       let volMul=1;
-      if(tod){ const m=tod(i); // U-shaped intraday vol
+      if(tod){ const m=tod(i);
         const x=(m-570)/390; volMul = 0.55 + 1.5*Math.pow(Math.abs(x-0.5)*2,2) + (m<600?0.8:0); }
       const sig = baseSig*volScale*volMul;
       const o=p, steps=[];
@@ -327,13 +394,12 @@ function computeLevels(){
     lv.PMH = Math.max(...D.pre.map(b=>b.h));
     lv.PML = Math.min(...D.pre.map(b=>b.l));
   }
-  lv.ORH = null; lv.ORL = null; // set after first RTH candle completes
+  lv.ORH = null; lv.ORL = null;
 }
 
 /* =============== tick path for one candle =============== */
 function buildTicks(bar){
   const up = bar.c >= bar.o;
-  // waypoint order: green tends O->L->H->C, red O->H->L->C (with some randomness)
   const first = (up ? (rnd()<0.72?bar.l:bar.h) : (rnd()<0.72?bar.h:bar.l));
   const second = first===bar.h ? bar.l : bar.h;
   const wp = [bar.o, first, second, bar.c];
@@ -341,14 +407,13 @@ function buildTicks(bar){
   seg.push(TICKS - seg[0] - seg[1]);
   const rng = Math.max(bar.h-bar.l, inst().tick);
   const out=[];
-  let k=0;
   for(let s=0;s<3;s++){
     const a=wp[s], b=wp[s+1], n=seg[s];
     for(let i=1;i<=n;i++){
       let p = a + (b-a)*(i/n) + gauss()*rng*0.10;
       p = clamp(p, bar.l, bar.h);
-      if(i===n) p=b;                      // hit waypoint exactly
-      out.push(snap(p)); k++;
+      if(i===n) p=b;
+      out.push(snap(p));
     }
   }
   out[out.length-1] = bar.c;
@@ -367,19 +432,26 @@ function newSession(){
   }
   computeLevels();
   done=[]; forming=null; barIdx=0; tickIdx=0; ticks=[];
-  ema9v=[]; ema21v=[]; price=null; dayOver=false;
-  pos=null; realized=0; balance=10000; tradeLog=[]; violCount=0;
+  ema1v=[]; ema2v=[]; price=null; prevPrice=null; dayOver=false;
+  pos=null; pend=null; ordMode=false; ordPx=null; sessLv=[];
+  realized=0; balance=10000; tradeLog=[]; violCount=0;
   viewOfs=0;
   sessIV = estIV();
+  phase = "setup";
   const tag=$("sessionTag");
-  tag.textContent = sym + " • 1-Min Candles • Session " + sessionNum + (real? " • REAL DATA • date hidden" : " • ⚠ SIMULATED DATA");
+  tag.textContent = sym + " • 1-Min • Session " + sessionNum + (real? " • REAL DATA • date hidden" : " • ⚠ SIMULATED DATA");
   tag.style.color = real ? "var(--green)" : "var(--amber)";
-  refreshButtons();
-  hideBanner(); updateHUD(); syncBrkt();
+  hideBanner(); updateHUD(); syncBrkt(); renderActions();
   paused=false; $("pauseB").textContent="⏸";
+  draw();
+}
+
+function startSession(){
+  if(phase!=="setup") return;
+  phase="live"; viewOfs=0;
   startCandle();
   scheduleTick();
-  draw();
+  renderActions(); updateHUD(); draw();
 }
 
 function startCandle(){
@@ -391,18 +463,30 @@ function startCandle(){
 }
 
 function stepTick(){
-  if(dayOver || !forming) return;
+  if(dayOver || !forming || phase!=="live") return;
   const bar = D.rth[barIdx];
+  prevPrice = price;
   price = ticks[tickIdx];
   forming.c = price;
   forming.h = Math.max(forming.h, price);
   forming.l = Math.min(forming.l, price);
   forming.v = Math.round(bar.v * (tickIdx+1)/TICKS);
+  // resting order fill
+  if(pend && !pos){
+    if(price===pend.px || (prevPrice!=null && ((prevPrice<pend.px&&price>=pend.px)||(prevPrice>pend.px&&price<=pend.px)))){
+      const o=pend; pend=null;
+      openPos(o.dir, o.px);
+      showBanner("Order filled at "+o.px.toFixed(2),"warn");
+      renderActions();
+    }
+  }
   checkStops();
   tickIdx++;
   if(tickIdx >= TICKS) finalizeCandle();
-  // rulebook 15:45 force-flat
-  if(cfg.r1545 && pos && minuteOfDay() >= 945){ closePos("Rulebook: 15:45 force-exit"); showBanner("15:45 force-exit — flat into the close","warn"); }
+  if(cfg.r1545 && minuteOfDay() >= 945){
+    if(pos){ closePos("Rulebook: 15:45 force-exit"); showBanner("15:45 force-exit — flat into the close","warn"); }
+    if(pend){ pend=null; renderActions(); }
+  }
   updateHUD();
 }
 
@@ -410,22 +494,19 @@ function finalizeCandle(){
   const bar = D.rth[barIdx];
   const fin = {o:bar.o,h:bar.h,l:bar.l,c:bar.c,v:bar.v};
   done.push(fin);
-  // EMAs
   const c = fin.c;
-  ema9v.push(ema9v.length ? ema9v[ema9v.length-1] + (c-ema9v[ema9v.length-1])*(2/10) : c);
-  ema21v.push(ema21v.length ? ema21v[ema21v.length-1] + (c-ema21v[ema21v.length-1])*(2/22) : c);
-  // ORB from first candle
+  ema1v.push(ema1v.length ? ema1v[ema1v.length-1] + (c-ema1v[ema1v.length-1])*(2/(cfg.e1+1)) : c);
+  ema2v.push(ema2v.length ? ema2v[ema2v.length-1] + (c-ema2v[ema2v.length-1])*(2/(cfg.e2+1)) : c);
   if(done.length===1){ lv.ORH=fin.h; lv.ORL=fin.l; }
-  // structural stop rule check
   if(cfg.struct && pos && barIdx > pos.entryBarIdx){
     if(pos.entryLow==null && done[pos.entryBarIdx]){ pos.entryLow=done[pos.entryBarIdx].l; pos.entryHigh=done[pos.entryBarIdx].h; }
     if(pos.entryLow!=null && !pos.structFlag){
       const red = fin.c < fin.o, green = fin.c > fin.o;
       if(pos.dir===1 && red && fin.l < pos.entryLow){
-        pos.structFlag=true; violCount++; showBanner("Structural stop: red candle took out the entry candle's low — thesis fail","warn");
+        pos.structFlag=true; violCount++; showBanner("Structural stop: opposite candle took out the entry candle's low — thesis fail","warn");
       }
       if(pos.dir===-1 && green && fin.h > pos.entryHigh){
-        pos.structFlag=true; violCount++; showBanner("Structural stop: green candle took out the entry candle's high — thesis fail","warn");
+        pos.structFlag=true; violCount++; showBanner("Structural stop: opposite candle took out the entry candle's high — thesis fail","warn");
       }
     }
   }
@@ -434,36 +515,48 @@ function finalizeCandle(){
   startCandle();
 }
 
-function minuteOfDay(){ return 570 + barIdx; } // 9:30 + completed bars
+function recomputeEmas(){
+  ema1v=[]; ema2v=[];
+  done.forEach(b=>{
+    const c=b.c;
+    ema1v.push(ema1v.length ? ema1v[ema1v.length-1] + (c-ema1v[ema1v.length-1])*(2/(cfg.e1+1)) : c);
+    ema2v.push(ema2v.length ? ema2v[ema2v.length-1] + (c-ema2v[ema2v.length-1])*(2/(cfg.e2+1)) : c);
+  });
+}
+
+function minuteOfDay(){ return 570 + barIdx; }
 
 function endDay(msg){
   dayOver=true; stopTimer();
   if(pos) closePos("Market close");
+  pend=null; ordMode=false;
+  renderActions();
   showStats(msg);
 }
 
 /* =============== timer =============== */
 function scheduleTick(){
   stopTimer();
-  if(paused || dayOver) return;
+  if(paused || dayOver || phase!=="live") return;
   const perTick = 60000/(TICKS*speed);
   tickTimer = setInterval(()=>{ stepTick(); draw(); }, perTick);
 }
 function stopTimer(){ if(tickTimer){ clearInterval(tickTimer); tickTimer=null; } }
-function runFast(nTicks){ // process ticks instantly, still honoring stops
+function runFast(nTicks){
+  if(phase!=="live") return;
   for(let i=0;i<nTicks && !dayOver;i++) stepTick();
   draw();
 }
 
 /* =============== trading =============== */
 function tradingOptions(){ return inst().opt && cfg.opt; }
-function openPos(dir){
-  if(pos || price==null || dayOver) return;
+function openPos(dir, fillPx){
+  if(pos || fillPx==null || dayOver) return;
   const r0 = inst().r0;
   pos = {
-    dir, entry:price, qty:cfg.qty,
-    sl:snap(price - dir*r0),
-    tp:snap(price + dir*2*r0),
+    dir, entry:fillPx, qty:cfg.qty,
+    sl:snap(fillPx - dir*r0),
+    tp:snap(fillPx + dir*2*r0),
     r:r0, entryBarIdx:barIdx,
     entryLow: forming?forming.l:null, entryHigh: forming?forming.h:null,
     structFlag:false, softWarned:false, openTime:timeStr(), opt:false
@@ -471,11 +564,11 @@ function openPos(dir){
   if(tradingOptions()){
     pos.opt = true;
     pos.call = dir===1;
-    pos.strike = Math.round(price/inst().strikeStep)*inst().strikeStep;  // ATM strike
+    pos.strike = Math.round(fillPx/inst().strikeStep)*inst().strikeStep;
     pos.iv = sessIV;
-    pos.entryPrem = Math.max(+bsPrice(price,pos.strike,minsToClose(),pos.iv,pos.call).toFixed(2), 0.05);
+    pos.entryPrem = Math.max(+bsPrice(fillPx,pos.strike,minsToClose(),pos.iv,pos.call).toFixed(2), 0.05);
   }
-  syncBrkt(); updateHUD(); draw();
+  syncBrkt(); renderActions(); updateHUD(); draw();
 }
 function closePos(reason, fillPx){
   if(!pos) return;
@@ -494,11 +587,10 @@ function closePos(reason, fillPx){
   tradeLog.push({sym, dir:label, entry:entryShown, exit:exitShown,
                  qty:pos.qty, pnl:+pnl.toFixed(2), open:pos.openTime, close:timeStr(),
                  reason, struct:pos.structFlag});
-  pos=null; syncBrkt(); updateHUD(); draw();
+  pos=null; syncBrkt(); renderActions(); updateHUD(); draw();
 }
 function checkStops(){
   if(!pos) return;
-  // chart-based stop/target on the underlying
   if(pos.dir===1){
     if(price <= pos.sl) return closePos("Stop loss", pos.sl);
     if(price >= pos.tp) return closePos("Take profit", pos.tp);
@@ -506,7 +598,6 @@ function checkStops(){
     if(price >= pos.sl) return closePos("Stop loss", pos.sl);
     if(price <= pos.tp) return closePos("Take profit", pos.tp);
   }
-  // rulebook premium stops for options: soft −15% warn, floor −25% exit
   if(pos.opt && cfg.pRules){
     const chg = (optPrem(price) - pos.entryPrem)/pos.entryPrem;
     if(chg <= -0.25){ showBanner("Premium floor −25% hit — auto-exit (rulebook)"); return closePos("Premium floor −25%"); }
@@ -518,6 +609,72 @@ function unrealized(){
   if(!pos || price==null) return 0;
   if(pos.opt) return (optPrem(price) - pos.entryPrem) * 100 * pos.qty;
   return (price-pos.entry)*pos.dir*inst().mult*pos.qty;
+}
+
+/* =============== order entry (on-chart, TradingView style) =============== */
+function placeOrder(dir){
+  if(pos || dayOver || price==null) return;
+  const px = snap(ordPx==null ? price : ordPx);
+  ordMode=false; ordPx=null;
+  if(Math.abs(px - price) <= inst().tick + 1e-9){
+    openPos(dir, price);
+  } else {
+    pend = {dir, px};
+    showBanner("Order resting at "+px.toFixed(2)+" — fills when price touches it","warn");
+  }
+  renderActions(); draw();
+}
+
+/* =============== action row =============== */
+function renderActions(){
+  const a=$("actRow");
+  if(phase==="setup"){
+    a.innerHTML = '<button class="abtn neutral" id="addLvB">＋ ADD LEVEL</button>'+
+                  '<button class="abtn start" id="startB">▶ START SESSION</button>';
+    $("addLvB").onclick = ()=>{
+      if(!lastV) return;
+      sessLv.push(snap((lastV.lo+lastV.hi)/2));
+      draw();
+    };
+    $("startB").onclick = startSession;
+  } else if(ordMode){
+    const o = tradingOptions();
+    a.innerHTML = '<button class="abtn buy" id="buyB">'+(o?"BUY CALL ▲":"BUY / LONG ▲")+'</button>'+
+                  '<button class="abtn sell" id="sellB">'+(o?"BUY PUT ▼":"SELL / SHORT ▼")+'</button>'+
+                  '<button class="abtn neutral" id="cxB" style="flex:.6">CANCEL</button>';
+    $("buyB").onclick = ()=>placeOrder(1);
+    $("sellB").onclick = ()=>placeOrder(-1);
+    $("cxB").onclick = ()=>{ ordMode=false; ordPx=null; renderActions(); draw(); };
+  } else {
+    a.innerHTML = '<button class="abtn trade" id="tradeB">⊕ TRADE</button>'+
+                  (pend ? '<button class="abtn neutral" id="cxOB">✕ ORDER @ '+pend.px.toFixed(2)+'</button>' : '')+
+                  '<button class="abtn exit'+(pos?" live":"")+'" id="exitB2">EXIT POSITION</button>';
+    const tb=$("tradeB");
+    tb.disabled = !!pos || !!pend || dayOver || price==null;
+    tb.onclick = ()=>{
+      if(tb.disabled) return;
+      ordMode=true; ordPx=price;
+      renderActions(); draw();
+    };
+    if(pend) $("cxOB").onclick = ()=>{ pend=null; renderActions(); draw(); };
+    const eb=$("exitB2");
+    eb.disabled = !pos;
+    eb.onclick = ()=>{ if(pos) closePos("Manual exit"); };
+  }
+  updateHint();
+}
+function updateHint(){
+  const h=$("brktHint");
+  if(phase==="setup"){
+    h.textContent = "Mark your levels: pan/zoom the prior day & premarket, ＋ ADD LEVEL drops a line (drag to place, drag off-chart to delete), then START SESSION.";
+  } else if(ordMode){
+    h.textContent = "Drag the entry line to your price, then BUY or SELL. At the current price it fills instantly; away from it, the order rests until touched.";
+  } else if(pos){
+    h.style.display="none"; return;
+  } else {
+    h.textContent = "⊕ TRADE opens an entry line on the chart. Stop-loss & take-profit arm on fill — drag their lines, or use Struct / Breakeven / 1R-2R-3R.";
+  }
+  h.style.display="block";
 }
 
 /* =============== HUD =============== */
@@ -538,13 +695,11 @@ function updateHUD(){
                                 : ((pos.dir===1?"Long ":"Short ")+pos.qty+(inst().fut?" "+sym:""));
     posEl.className="v "+(pos.dir===1?"long":"short");
   }
-  else { posEl.textContent="Flat"; posEl.className="v"; }
+  else { posEl.textContent = pend ? "Order…" : "Flat"; posEl.className="v"; }
   $("pxV").textContent = fmt(price);
-  $("tmV").textContent = dayOver ? "Closed" : timeStr();
-  $("exitB").className = pos ? "live" : "";
-  $("longB").disabled = !!pos || dayOver;
-  $("shortB").disabled = !!pos || dayOver;
-  // premium strip
+  $("tmV").textContent = dayOver ? "Closed" : (phase==="setup" ? "Pre-open" : timeStr());
+  const tb=$("tradeB"); if(tb) tb.disabled = !!pos || !!pend || dayOver || price==null;
+  const eb=$("exitB2"); if(eb){ eb.disabled=!pos; eb.className="abtn exit"+(pos?" live":""); }
   const pr=$("premRow");
   if(pos && pos.opt && price!=null){
     pr.className="show";
@@ -554,11 +709,6 @@ function updateHUD(){
     const ce=$("premChg"); ce.textContent="("+(chg>=0?"+":"")+chg.toFixed(1)+"%)";
     ce.className = chg>=0?"pos":"neg";
   } else pr.className="";
-}
-function refreshButtons(){
-  const o = tradingOptions();
-  $("longB").textContent  = o ? "BUY CALL" : "LONG";
-  $("shortB").textContent = o ? "BUY PUT"  : "SHORT";
 }
 let bannerT=null;
 function showBanner(msg, cls){
@@ -570,9 +720,9 @@ function hideBanner(){ $("banner").style.display="none"; }
 /* =============== SL/TP panel =============== */
 function syncBrkt(){
   $("brkt").className = pos ? "" : "flat";
-  $("brktHint").style.display = pos ? "none" : "block";
   $("slVal").textContent = pos ? fmt(pos.sl) : "—";
   $("tpVal").textContent = pos ? fmt(pos.tp) : "—";
+  updateHint();
 }
 document.querySelectorAll(".adj").forEach(el=>{
   el.addEventListener("click", ()=>{
@@ -580,8 +730,7 @@ document.querySelectorAll(".adj").forEach(el=>{
     const d = +el.dataset.d * inst().tick;
     if(el.dataset.t==="sl") pos.sl = +(pos.sl+d).toFixed(2);
     else pos.tp = +(pos.tp+d).toFixed(2);
-    syncBrkt();
-    checkStops(); draw();
+    syncBrkt(); checkStops(); draw();
   });
 });
 $("beB").addEventListener("click", ()=>{ if(pos){ pos.sl=pos.entry; syncBrkt(); draw(); }});
@@ -612,7 +761,7 @@ function resize(){
 }
 window.addEventListener("resize", resize);
 
-// touch on the chart: grab an SL/TP line to drag it; anywhere else pans history
+/* touch: order line > setup levels > SL/TP > pan */
 let dragX=null, dragOfs=0;
 const canvasY = e => e.clientY - cv.getBoundingClientRect().top;
 const priceAtY = y => lastV ? lastV.lo + (1 - y/lastV.chH)*(lastV.hi-lastV.lo) : null;
@@ -620,21 +769,37 @@ const yAtPrice = p => lastV.chH - (p-lastV.lo)/(lastV.hi-lastV.lo)*lastV.chH;
 
 cv.addEventListener("pointerdown", e=>{
   try{cv.setPointerCapture(e.pointerId);}catch(_){}
-  if(pos && lastV){                       // finger near the SL or TP line? grab it
-    const y = canvasY(e);
+  const y = canvasY(e);
+  if(ordMode && lastV){ dragLine="ord"; return; }
+  if(phase==="setup" && lastV && sessLv.length){
+    let bi=-1, bd=28;
+    sessLv.forEach((p,i)=>{ const d=Math.abs(y-yAtPrice(p)); if(d<bd){bd=d;bi=i;} });
+    if(bi>=0){ dragLvIdx=bi; dragLastY=y; return; }
+  }
+  if(phase==="live" && pos && lastV){
     const dS = Math.abs(y - yAtPrice(pos.sl)), dT = Math.abs(y - yAtPrice(pos.tp));
     if(Math.min(dS,dT) < 26){ dragLine = dS<=dT ? "sl" : "tp"; return; }
   }
-  dragX=e.clientX; dragOfs=viewOfs;       // otherwise pan
+  dragX=e.clientX; dragOfs=viewOfs;
 });
 cv.addEventListener("pointermove", e=>{
+  const y = canvasY(e);
+  if(dragLine==="ord" && lastV){
+    ordPx = snap(clamp(priceAtY(y), lastV.lo, lastV.hi));
+    draw(); return;
+  }
+  if(dragLvIdx>=0 && lastV){
+    dragLastY = y;
+    sessLv[dragLvIdx] = snap(clamp(priceAtY(y), lastV.lo, lastV.hi));
+    draw(); return;
+  }
   if(dragLine && pos && lastV){
-    let p = snap(priceAtY(canvasY(e)));
+    let p = snap(priceAtY(y));
     const t = inst().tick;
-    if(dragLine==="sl"){                  // keep the stop on the protective side of price
+    if(dragLine==="sl"){
       p = pos.dir===1 ? Math.min(p, snap(price-t)) : Math.max(p, snap(price+t));
       pos.sl = p; pos.r = Math.abs(pos.entry-pos.sl);
-    } else {                              // keep the target on the profit side of price
+    } else {
       p = pos.dir===1 ? Math.max(p, snap(price+t)) : Math.min(p, snap(price-t));
       pos.tp = p;
     }
@@ -645,7 +810,14 @@ cv.addEventListener("pointermove", e=>{
   viewOfs = Math.max(0, dragOfs + Math.round((e.clientX-dragX)/bwpx));
   draw();
 });
-const endDrag = ()=>{ if(dragLine){ dragLine=null; checkStops(); } dragX=null; };
+const endDrag = ()=>{
+  if(dragLvIdx>=0 && lastV && dragLastY!=null && (dragLastY<12 || dragLastY>lastV.chH-6)){
+    sessLv.splice(dragLvIdx,1);           // dragged off the chart = delete
+  }
+  if(dragLine==="sl"||dragLine==="tp") checkStops();
+  dragLine=null; dragLvIdx=-1; dragLastY=null; dragX=null;
+  draw();
+};
 cv.addEventListener("pointerup", endDrag);
 cv.addEventListener("pointercancel", endDrag);
 $("liveB").addEventListener("click", ()=>{ viewOfs=0; draw(); });
@@ -655,16 +827,16 @@ $("zoomOutB").addEventListener("click", ()=>{ viewN=clamp(Math.round(viewN*1.4),
 function draw(){
   const W=cv.width/devicePixelRatio, H=cv.height/devicePixelRatio;
   if(!W||!D) return;
+  const P = pal();
   ctx.clearRect(0,0,W,H);
   const axW=52, volH = cfg.vol ? H*0.16 : 0;
   const chW=W-axW, chH=H-volH-6;
 
-  // full history: prior-day session + premarket + today's forming session
   const prevBars = D.prior.map(b=>({...b, prev:true}));
   const preBars  = D.pre.map(b=>({...b, pre:true}));
   const sess = done.map(b=>({...b})); if(forming) sess.push({...forming, live:true});
   const all = prevBars.concat(preBars, sess);
-  const sessStart = prevBars.length + preBars.length;   // global index of today's 9:30 bar
+  const sessStart = prevBars.length + preBars.length;
   const NV = viewN;
   const maxOfs = Math.max(0, all.length - NV);
   if(viewOfs > maxOfs) viewOfs = maxOfs;
@@ -675,21 +847,22 @@ function draw(){
   const vis = all.slice(start, end);
   if(!vis.length) return;
   const bw = chW/NV;
-  const offS = sessStart - start;                        // vis index of today's 9:30 bar
-  const mOf = idx => idx < prevBars.length ? 570 + idx                 // yesterday 9:30→16:00
-             : idx < sessStart ? 570 - (sessStart - idx)               // premarket, counting back from open
-             : 570 + (idx - sessStart);                                // today
+  const offS = sessStart - start;
+  const mOf = idx => idx < prevBars.length ? 570 + idx
+             : idx < sessStart ? 570 - (sessStart - idx)
+             : 570 + (idx - sessStart);
 
   // y-range
   let lo=Infinity, hi=-Infinity;
   vis.forEach(b=>{ lo=Math.min(lo,b.l); hi=Math.max(hi,b.h); });
   if(pos){ lo=Math.min(lo,pos.sl,pos.tp); hi=Math.max(hi,pos.sl,pos.tp); }
+  if(pend){ lo=Math.min(lo,pend.px); hi=Math.max(hi,pend.px); }
   const pad=(hi-lo)*0.07||1; lo-=pad; hi+=pad;
   const Y=p=>chH-(p-lo)/(hi-lo)*chH;
-  lastV = {lo, hi, chH};                 // exposed so touch handlers can map finger Y -> price
+  lastV = {lo, hi, chH};
 
   // gridlines + price axis
-  ctx.font="10px system-ui"; ctx.fillStyle="#5a6673"; ctx.strokeStyle="#1b2530"; ctx.lineWidth=1;
+  ctx.font="10px system-ui"; ctx.fillStyle=P.ax; ctx.strokeStyle=P.grid; ctx.lineWidth=1;
   const stepP=niceStep((hi-lo)/6);
   for(let p=Math.ceil(lo/stepP)*stepP; p<hi; p+=stepP){
     const y=Y(p);
@@ -697,29 +870,29 @@ function draw(){
     ctx.fillText(p.toFixed(2), chW+4, y+3);
   }
 
-  // session dividers + time axis (label every 15 minutes; sparser on the prior day)
+  // session dividers + time axis
   for(let vi=0; vi<vis.length; vi++){
     const idx = start + vi, x = vi*bw + bw/2;
-    if(idx === prevBars.length && idx>0){         // prior-day close / premarket begins
-      ctx.strokeStyle="#3a4654"; ctx.setLineDash([3,4]);
+    if(idx === prevBars.length && idx>0){
+      ctx.strokeStyle=P.div; ctx.setLineDash([3,4]);
       ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,chH); ctx.stroke(); ctx.setLineDash([]);
-      ctx.fillStyle="#5a6673"; ctx.fillText("‹ prev day", x+3, 12);
+      ctx.fillStyle=P.ax; ctx.fillText("‹ prev day", x+3, 12);
     }
     const m = mOf(idx), prior = idx < prevBars.length;
     if(m % (prior?60:15) !== 0) continue;
-    ctx.strokeStyle="#1b2530";
+    ctx.strokeStyle=P.grid;
     ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,chH); ctx.stroke();
     const hh=Math.floor(m/60), mm=m%60;
-    ctx.fillStyle = (idx===sessStart) ? "#8a97a5" : prior ? "#3f4a58" : "#5a6673";
+    ctx.fillStyle = (idx===sessStart) ? P.axHi : prior ? P.axDim : P.ax;
     ctx.fillText(String(hh).padStart(2,"0")+":"+String(mm).padStart(2,"0"), x-14, H-3);
   }
 
-  // levels
+  // levels (auto + standing + session-marked)
   if(cfg.lvls){
-    const pm = inst().fut ? "ON" : "PM"; // futures: overnight high/low instead of premarket
-    const items=[["PDH",lv.PDH,"#c7a04a"],["PDL",lv.PDL,"#c7a04a"],[pm+"H",lv.PMH,"#6ea8d8"],
-                 [pm+"L",lv.PML,"#6ea8d8"],["OR H",lv.ORH,"#b06fd8"],["OR L",lv.ORL,"#b06fd8"]];
-    cfg.custom.forEach((p,i)=>items.push(["S/R",p,"#8a97a5"]));
+    const pm = inst().fut ? "ON" : "PM";
+    const items=[["PDH",lv.PDH,P.gold],["PDL",lv.PDL,P.gold],[pm+"H",lv.PMH,P.pmcol],
+                 [pm+"L",lv.PML,P.pmcol],["OR H",lv.ORH,P.orcol],["OR L",lv.ORL,P.orcol]];
+    cfg.custom.forEach(p=>items.push(["S/R",p,P.lvl]));
     items.forEach(([name,p,col])=>{
       if(p==null||p<lo||p>hi) return;
       const y=Y(p);
@@ -729,39 +902,49 @@ function draw(){
       ctx.fillStyle=col; ctx.fillText(name+" "+p.toFixed(2), 6, y-3);
     });
   }
+  // session-marked levels (always shown; draggable in setup)
+  sessLv.forEach(p=>{
+    if(p<lo||p>hi) return;
+    const y=Y(p);
+    ctx.strokeStyle=P.lvl; ctx.setLineDash([7,3]); ctx.lineWidth=phase==="setup"?1.8:1.1;
+    ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(chW,y); ctx.stroke(); ctx.setLineDash([]); ctx.lineWidth=1;
+    ctx.fillStyle=P.lvl;
+    ctx.fillText((phase==="setup"?"⇕ ":"")+"LVL "+p.toFixed(2), chW-78, y-3);
+  });
 
   // volume
   if(cfg.vol){
     const vmax=Math.max(...vis.map(b=>b.v||1));
+    ctx.globalAlpha=0.35;
     vis.forEach((b,i)=>{
       const x=i*bw;
-      ctx.fillStyle = b.c>=b.o ? "rgba(46,189,133,.35)" : "rgba(246,70,93,.35)";
+      ctx.fillStyle = b.c>=b.o ? P.up : P.dn;
       const h=(b.v/vmax)*(volH-6);
       ctx.fillRect(x+bw*0.15, H-h, bw*0.7, h);
     });
+    ctx.globalAlpha=1;
   }
 
   // candles
   vis.forEach((b,i)=>{
     const x=i*bw+bw/2;
     const up=b.c>=b.o;
-    const col = b.pre  ? (up?"rgba(46,189,133,.40)":"rgba(246,70,93,.40)")
-              : b.prev ? (up?"rgba(46,189,133,.60)":"rgba(246,70,93,.60)")
-              : (up?"#2ebd85":"#f6465d");
+    const col = up?P.up:P.dn;
+    ctx.globalAlpha = b.pre?0.42 : b.prev?0.62 : 1;
     ctx.strokeStyle=col; ctx.fillStyle=col; ctx.lineWidth=1;
     ctx.beginPath(); ctx.moveTo(x,Y(b.h)); ctx.lineTo(x,Y(b.l)); ctx.stroke();
     const y1=Y(Math.max(b.o,b.c)), y2=Y(Math.min(b.o,b.c));
     ctx.fillRect(x-bw*0.32, y1, bw*0.64, Math.max(y2-y1,1));
   });
+  ctx.globalAlpha=1;
 
-  // EMAs (over completed session bars only)
+  // EMAs
   function plotEma(arr,col){
     if(arr.length<2) return;
-    const off = offS; // index of first session bar in vis
     ctx.strokeStyle=col; ctx.lineWidth=1.5; ctx.beginPath();
     let started=false;
     for(let i=0;i<arr.length;i++){
-      const vi = off + i;
+      const vi = offS + i;
       if(vi<0) continue;
       if(vi>=vis.length) break;
       const x=vi*bw+bw/2, y=Y(arr[i]);
@@ -769,37 +952,42 @@ function draw(){
     }
     ctx.stroke();
   }
-  if(cfg.ema9) plotEma(ema9v,"#e8a33d");
-  if(cfg.ema21) plotEma(ema21v,"#5b8dbf");
+  if(cfg.ema1) plotEma(ema1v,P.e1col);
+  if(cfg.ema2) plotEma(ema2v,P.e2col);
 
-  // position lines — SL and TP carry drag-handle pills
-  if(pos){
-    const tag=(p,col,nm,drag)=>{
-      if(p<lo||p>hi) return;
-      const y=Y(p);
-      ctx.strokeStyle=col; ctx.setLineDash([2,3]); ctx.lineWidth=drag?1.6:1.1;
-      ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(chW,y); ctx.stroke(); ctx.setLineDash([]);
-      ctx.font="bold 11px system-ui";
-      const txt = drag ? "⇕ "+nm+" "+p.toFixed(2) : nm;
-      const w = ctx.measureText(txt).width+14;
-      const hp = drag?13:9;
-      ctx.fillStyle="#0d131b";
-      ctx.fillRect(chW-w-8, y-hp, w, hp*2);
-      ctx.strokeStyle=col; ctx.lineWidth=1; ctx.strokeRect(chW-w-8, y-hp, w, hp*2);
-      ctx.fillStyle=col; ctx.fillText(txt, chW-w-1, y+4);
-    };
-    tag(pos.entry,"#9aa7b4","Entry",false);
-    tag(pos.sl,"#f6465d","SL",true);
-    tag(pos.tp,"#2ebd85","TP",true);
+  // position / order lines with drag pills
+  function tag(p,col,nm,drag){
+    if(p<lo||p>hi) return;
+    const y=Y(p);
+    ctx.strokeStyle=col; ctx.setLineDash([2,3]); ctx.lineWidth=drag?1.6:1.1;
+    ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(chW,y); ctx.stroke(); ctx.setLineDash([]);
+    ctx.font="bold 11px system-ui";
+    const txt = drag ? "⇕ "+nm+" "+p.toFixed(2) : nm+" "+p.toFixed(2);
+    const w = ctx.measureText(txt).width+14;
+    const hp = drag?13:9;
+    ctx.fillStyle=P.pill;
+    ctx.fillRect(chW-w-8, y-hp, w, hp*2);
+    ctx.strokeStyle=col; ctx.lineWidth=1; ctx.strokeRect(chW-w-8, y-hp, w, hp*2);
+    ctx.fillStyle=col; ctx.fillText(txt, chW-w-1, y+4);
+    ctx.font="10px system-ui";
   }
+  if(pos){
+    tag(pos.entry,P.entry,"Entry",false);
+    tag(pos.sl,P.dn,"SL",true);
+    tag(pos.tp,P.up,"TP",true);
+  }
+  if(pend) tag(pend.px,P.ord,"ORDER",false);
+  if(ordMode && ordPx!=null) tag(ordPx,P.ord,"Entry",true);
 
   // last price marker
   if(price!=null){
     const y=Y(price);
-    ctx.fillStyle="#0d131b"; ctx.strokeStyle="#d8e0ea";
+    ctx.fillStyle=P.pill;
     ctx.fillRect(chW, y-8, axW, 16);
-    ctx.fillStyle="#fff"; ctx.font="bold 11px system-ui";
+    ctx.strokeStyle=P.axHi; ctx.strokeRect(chW, y-8, axW-1, 16);
+    ctx.fillStyle=P.pxTxt; ctx.font="bold 11px system-ui";
     ctx.fillText(price.toFixed(2), chW+4, y+4);
+    ctx.font="10px system-ui";
   }
 }
 function niceStep(raw){
@@ -853,7 +1041,6 @@ function parseImport(text, name){
   rows = rows.filter(r=>r.t && isFinite(r.o));
   if(rows.length<100) return {err:"Parsed only "+rows.length+" bars — need at least a full day of 1m data."};
   rows.sort((a,b)=>a.t-b.t);
-  // bucket by ET date, split premarket vs RTH
   const fmtD=new Intl.DateTimeFormat("en-US",{timeZone:"America/New_York",year:"numeric",month:"2-digit",day:"2-digit"});
   const fmtT=new Intl.DateTimeFormat("en-US",{timeZone:"America/New_York",hour:"2-digit",minute:"2-digit",hour12:false});
   const byDay={};
@@ -886,11 +1073,8 @@ function normTime(t){
 }
 
 /* =============== wiring =============== */
-$("longB").addEventListener("click", ()=>openPos(1));
-$("shortB").addEventListener("click", ()=>openPos(-1));
-$("exitB").addEventListener("click", ()=>{ if(pos) closePos("Manual exit"); });
-
 $("pauseB").addEventListener("click", ()=>{
+  if(phase!=="live") return;
   paused=!paused; $("pauseB").textContent = paused?"▶":"⏸";
   paused? stopTimer() : scheduleTick();
 });
@@ -904,7 +1088,11 @@ document.querySelectorAll(".spd").forEach(el=>{
 $("nextB").addEventListener("click", ()=>runFast(TICKS - tickIdx));
 $("jumpB").addEventListener("click", ()=>runFast(TICKS*15));
 
-$("gear").addEventListener("click", ()=>{ paused=true; stopTimer(); $("pauseB").textContent="▶"; $("setOv").className="overlay show"; });
+$("gear").addEventListener("click", ()=>{
+  if(phase==="live"){ paused=true; stopTimer(); $("pauseB").textContent="▶"; }
+  reflectSettings();
+  $("setOv").className="overlay show";
+});
 let pendingSym = sym;
 document.querySelectorAll(".chip").forEach(el=>{
   el.addEventListener("click", ()=>{
@@ -914,21 +1102,27 @@ document.querySelectorAll(".chip").forEach(el=>{
 });
 function applySettings(){
   cfg.qty = clamp(+$("qtyIn").value||1, 1, 100000);
+  cfg.theme = $("lightC").checked ? "light" : "dark";
+  cfg.cb = $("cbC").checked;
   cfg.opt=$("optC").checked; cfg.pRules=$("pRulesC").checked;
-  cfg.ema9=$("ema9C").checked; cfg.ema21=$("ema21C").checked;
+  cfg.ema1=$("ema1C").checked; cfg.ema2=$("ema2C").checked;
+  cfg.e1 = clamp(Math.round(+$("e1In").value)||9, 2, 400);
+  cfg.e2 = clamp(Math.round(+$("e2In").value)||21, 2, 400);
   cfg.vol=$("volC").checked; cfg.lvls=$("lvlC").checked;
   cfg.r1545=$("r1545C").checked; cfg.struct=$("structC").checked;
   cfg.custom = $("lvlIn").value.split(/\n/).map(s=>+s.trim()).filter(v=>isFinite(v)&&v>0);
+  applyTheme(); recomputeEmas(); saveCfg();
   return pendingSym !== sym;
 }
 $("applyB").addEventListener("click", ()=>{
   const symChanged = applySettings();
   $("setOv").className="overlay";
-  if(symChanged){ sym = pendingSym; newSession(); return; } // new instrument = new session
-  refreshButtons();
-  paused=false; $("pauseB").textContent="⏸"; scheduleTick(); draw();
+  if(symChanged){ sym = pendingSym; saveCfg(); newSession(); return; }
+  renderActions();
+  if(phase==="live"){ paused=false; $("pauseB").textContent="⏸"; scheduleTick(); }
+  draw();
 });
-$("newDayB").addEventListener("click", ()=>{ applySettings(); sym = pendingSym; $("setOv").className="overlay"; newSession(); });
+$("newDayB").addEventListener("click", ()=>{ applySettings(); sym = pendingSym; saveCfg(); $("setOv").className="overlay"; newSession(); });
 $("fileIn").addEventListener("change", e=>{
   const f=e.target.files[0]; if(!f) return;
   const target=$("impSym").value;
@@ -944,20 +1138,19 @@ $("fileIn").addEventListener("change", e=>{
 });
 $("againB").addEventListener("click", ()=>{ $("eodOv").className="overlay"; newSession(); });
 $("expB").addEventListener("click", ()=>{
-  const blob=new Blob([JSON.stringify({session:sessionNum, trades:tradeLog, violations:violCount}, null, 2)],{type:"application/json"});
+  const blob=new Blob([JSON.stringify({session:sessionNum, sym, trades:tradeLog, violations:violCount}, null, 2)],{type:"application/json"});
   const a=document.createElement("a");
   a.href=URL.createObjectURL(blob); a.download="replay-session-"+sessionNum+".json"; a.click();
 });
 
 /* =============== boot =============== */
+loadCfg();
+applyTheme();
 resize();
 newSession();
-// installable-app plumbing (no-op when opened as a plain local file)
 if(location.protocol==="https:" && "serviceWorker" in navigator){
   navigator.serviceWorker.register("sw.js").catch(()=>{});
 }
-// auto-load real data published alongside the app (data/*.json in the repo).
-// Falls back silently to manual import when the files aren't there (e.g. local file).
 async function loadRemoteData(){
   if(!/^https?:$/.test(location.protocol)) return;
   let got=0;
@@ -972,8 +1165,7 @@ async function loadRemoteData(){
   if(!got) return;
   $("dataInfo").style.color="var(--green)";
   $("dataInfo").textContent="Auto-loaded real data for: "+Object.keys(importedBySym).join(", ");
-  // If the player is still at the top of an untouched simulated session, restart into real data
-  if(importedBySym[sym] && !pos && tradeLog.length===0 && barIdx<5) newSession();
+  if(importedBySym[sym] && phase==="setup" && tradeLog.length===0 && done.length===0) newSession();
   else if(importedBySym[sym]) showBanner("Real data loaded — next session uses it","warn");
 }
 loadRemoteData();
