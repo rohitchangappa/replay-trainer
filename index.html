@@ -233,6 +233,7 @@
 
 <script>
 "use strict";
+const VERSION = "v4.8";
 /* =============== config / state =============== */
 const TICKS = 24;
 const INST = {
@@ -511,7 +512,7 @@ function newSession(){
   buildEmas();
   phase = "setup";
   const tag=$("sessionTag");
-  tag.textContent = sym + " • Session " + sessionNum + (real? " • REAL DATA • date hidden" : " • ⚠ SIMULATED DATA");
+  tag.textContent = VERSION + " • " + sym + " • Session " + sessionNum + (real? " • REAL DATA • date hidden" : " • ⚠ SIMULATED DATA");
   tag.style.color = real ? "var(--green)" : "var(--amber)";
   hideBanner(); updateHUD(); syncBrkt(); renderActions();
   paused=false; $("pauseB").textContent="⏸";
@@ -820,6 +821,7 @@ function resize(){
   draw();
 }
 window.addEventListener("resize", resize);
+new ResizeObserver(()=>resize()).observe(cv.parentElement);  // panel show/hide changes chart size — keep buffer in sync
 
 let dragX=null, dragOfs=0;
 const canvasY = e => e.clientY - cv.getBoundingClientRect().top;
