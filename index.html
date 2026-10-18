@@ -194,7 +194,7 @@
   <label class="set">Rulebook: structural-stop alerts <input type="checkbox" id="structC" checked></label>
   <p style="margin-top:10px">Custom levels (one price per line — your drawn S/R):</p>
   <textarea id="lvlIn" placeholder="574.50&#10;576.20"></textarea>
-  <p style="margin-top:10px">Load <b>real past data</b> — JSON <code>[{time,open,high,low,close,volume}]</code> or TradingView CSV export. Pick which instrument the file belongs to, then choose the file. Multiple days supported; sessions use a random day with the date hidden. Until real data is loaded, the game runs on clearly-labeled simulated data.</p>
+  <p style="margin-top:10px">Real data auto-loads from the app's site (data folder in the repo) when available. Manual import below is the fallback — JSON <code>[{time,open,high,low,close,volume}]</code> or TradingView CSV. Pick the instrument, then choose the file. Sessions use a random day with the date hidden.</p>
   <div style="display:flex; gap:8px; align-items:center;">
     <select id="impSym"><option>SPY</option><option>QQQ</option><option>ES</option><option>NQ</option></select>
     <input type="file" id="fileIn" accept=".json,.csv,.txt">
@@ -956,6 +956,27 @@ newSession();
 if(location.protocol==="https:" && "serviceWorker" in navigator){
   navigator.serviceWorker.register("sw.js").catch(()=>{});
 }
+// auto-load real data published alongside the app (data/*.json in the repo).
+// Falls back silently to manual import when the files aren't there (e.g. local file).
+async function loadRemoteData(){
+  if(!/^https?:$/.test(location.protocol)) return;
+  let got=0;
+  for(const s of ["SPY","QQQ","ES","NQ"]){
+    try{
+      const r = await fetch("data/"+s+"_1m.json", {cache:"no-cache"});
+      if(!r.ok) continue;
+      const res = parseImport(await r.text(), s);
+      if(!res.err && res.days.length){ importedBySym[s]=res.days; got++; }
+    }catch(_){}
+  }
+  if(!got) return;
+  $("dataInfo").style.color="var(--green)";
+  $("dataInfo").textContent="Auto-loaded real data for: "+Object.keys(importedBySym).join(", ");
+  // If the player is still at the top of an untouched simulated session, restart into real data
+  if(importedBySym[sym] && !pos && tradeLog.length===0 && barIdx<5) newSession();
+  else if(importedBySym[sym]) showBanner("Real data loaded — next session uses it","warn");
+}
+loadRemoteData();
 </script>
 </body>
 </html>
