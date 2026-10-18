@@ -892,7 +892,7 @@ cv.addEventListener("pointermove", e=>{
   }
   if(dragX==null) return;
   const bwpx = Math.max((cv.clientWidth-52)/viewN, 1);
-  viewOfs = Math.max(0, dragOfs + Math.round((e.clientX-dragX)/bwpx));
+  viewOfs = dragOfs + Math.round((e.clientX-dragX)/bwpx);   // negative = blank space right of the last candle, TV-style
   draw();
 });
 const endDrag = ()=>{
@@ -987,7 +987,8 @@ function draw(){
   const NV = viewN;
   const maxOfs = Math.max(0, all.length - NV);
   if(viewOfs > maxOfs) viewOfs = maxOfs;
-  const lb=$("liveB"), lshow = viewOfs>0 ? "block" : "none";
+  if(viewOfs < -(NV-8)) viewOfs = -(NV-8);   // keep at least a few candles on screen
+  const lb=$("liveB"), lshow = viewOfs!==0 ? "block" : "none";
   if(lb.style.display !== lshow) lb.style.display = lshow;
   const end = all.length - viewOfs;
   const start = Math.max(0, end - NV);
