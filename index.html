@@ -139,6 +139,7 @@
     <div class="cbtn tfc on" data-tf="1">1m</div>
     <div class="cbtn tfc" data-tf="5">5m</div>
     <div class="cbtn tfc" data-tf="15">15m</div>
+    <div class="cbtn tfc" data-tf="D">D</div>
     <div class="cbtn" id="liveB">LIVE ▸</div>
     <div class="cbtn" id="zoomOutB">−</div>
     <div class="cbtn" id="zoomInB">+</div>
@@ -904,13 +905,24 @@ $("zoomInB").addEventListener("click", ()=>{ viewN=clamp(Math.round(viewN/1.4),4
 $("zoomOutB").addEventListener("click", ()=>{ viewN=clamp(Math.round(viewN*1.4),40,260); draw(); });
 document.querySelectorAll(".tfc").forEach(el=>{
   el.addEventListener("click", ()=>{
+    const tf = el.dataset.tf==="D" ? "D" : +el.dataset.tf;
+    if(tf==="D" && !(dailyBySym[sym] && dailyBySym[sym].length)){
+      showBanner("Daily view needs real daily data (data/"+sym+"_1d.json) — run the data refresh","warn");
+      return;
+    }
     document.querySelectorAll(".tfc").forEach(x=>x.classList.remove("on"));
     el.classList.add("on");
-    dispTf = +el.dataset.tf;
+    dispTf = tf;
     viewOfs = 0;
     draw();
   });
 });
+// mouse-wheel zoom (desktop): scroll down = zoom out, up = zoom in
+cv.addEventListener("wheel", e=>{
+  e.preventDefault();
+  viewN = clamp(Math.round(viewN * (e.deltaY>0 ? 1.15 : 1/1.15)), 40, 260);
+  draw();
+}, {passive:false});
 
 /* aggregate 1m bars into display-timeframe buckets.
    "start": aligned to segment start (prior day & session open at :30, clock-aligned)
@@ -945,13 +957,26 @@ function draw(){
   const chW=W-axW, chH=H-volH-6;
   const T = dispTf;
 
-  const sess1m = done.concat(forming?[forming]:[]);
-  const prevAgg = aggBars(D.prior, T, 570, {prev:true}, "start");
-  const preAgg  = aggBars(D.pre,  T, 570 - D.pre.length, {pre:true}, "end");
-  const sessAgg = aggBars(sess1m, T, 570, {}, "start");
-  if(sessAgg.length && (forming || sess1m.length % T !== 0)) sessAgg[sessAgg.length-1].live=true;
-  const all = prevAgg.concat(preAgg, sessAgg);
-  const sessStart = prevAgg.length + preAgg.length;
+  let prevAgg=[], preAgg=[], sessAgg=[], all, sessStart;
+  if(T==="D"){
+    // daily chart: real daily history up to the hidden day, plus today's candle building live
+    const dd = (dailyBySym[sym]||[]).filter(r=>!D.date || r.d < D.date);
+    all = dd.map(r=>({o:r.o??r.c, h:r.h??r.c, l:r.l??r.c, c:r.c, v:r.v||0, m:null}));
+    const s = done.concat(forming?[forming]:[]);
+    if(s.length){
+      all = all.concat([{o:s[0].o, h:Math.max(...s.map(b=>b.h)), l:Math.min(...s.map(b=>b.l)),
+                         c:s[s.length-1].c, v:0, m:null, live:true}]);
+    }
+    sessStart = all.length;
+  } else {
+    const sess1m = done.concat(forming?[forming]:[]);
+    prevAgg = aggBars(D.prior, T, 570, {prev:true}, "start");
+    preAgg  = aggBars(D.pre,  T, 570 - D.pre.length, {pre:true}, "end");
+    sessAgg = aggBars(sess1m, T, 570, {}, "start");
+    if(sessAgg.length && (forming || sess1m.length % T !== 0)) sessAgg[sessAgg.length-1].live=true;
+    all = prevAgg.concat(preAgg, sessAgg);
+    sessStart = prevAgg.length + preAgg.length;
+  }
 
   const NV = viewN;
   const maxOfs = Math.max(0, all.length - NV);
@@ -987,6 +1012,13 @@ function draw(){
   const cadPrior = T===1?60 : T===5?60 : 120;
   for(let vi=0; vi<vis.length; vi++){
     const idx = start + vi, x = vi*bw + bw/2, b = vis[vi];
+    if(b.m==null){                       // daily view: relative day labels, no dates
+      const back = all.length-1-idx;
+      if(back>0 && back%10===0){
+        ctx.fillStyle=P.ax; ctx.fillText("−"+back+"d", x-10, H-3);
+      }
+      continue;
+    }
     if(idx === prevAgg.length && idx>0){
       ctx.strokeStyle=P.div; ctx.setLineDash([3,4]);
       ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,chH); ctx.stroke(); ctx.setLineDash([]);
@@ -1054,7 +1086,7 @@ function draw(){
   ctx.globalAlpha=1;
 
   // intraday EMAs: value per display bucket = engine value at bucket's last completed 1m bar
-  emaLive.forEach(st=>{
+  if(T!=="D") emaLive.forEach(st=>{
     if(!st.series.length) return;
     const sty = emaStyle(st.slot);
     ctx.strokeStyle=sty.col; ctx.lineWidth=sty.w; ctx.beginPath();
@@ -1219,7 +1251,10 @@ function parseDaily(text){
     const fmtD=new Intl.DateTimeFormat("en-CA",{timeZone:"America/New_York",year:"numeric",month:"2-digit",day:"2-digit"});
     return arr.map(r=>{
       const t=normTime(r.time??r.t); const c=+(r.close??r.c);
-      return (t&&isFinite(c)) ? {d:fmtD.format(new Date(t*1000)), c} : null;
+      if(!t || !isFinite(c)) return null;
+      const num=x=>{ const v=+x; return isFinite(v)?v:c; };
+      return {d:fmtD.format(new Date(t*1000)), c,
+              o:num(r.open??r.o), h:num(r.high??r.h), l:num(r.low??r.l), v:+(r.volume??r.v)||0};
     }).filter(Boolean).sort((a,b)=>a.d<b.d?-1:1);
   }catch(_){ return null; }
 }

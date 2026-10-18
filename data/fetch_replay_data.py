@@ -71,7 +71,7 @@ def fetch_symbol(name, yahoo_sym, prepost):
 
 
 def fetch_daily(name, yahoo_sym):
-    """2 years of daily closes — used by the game for the daily 50/200 EMA lines."""
+    """2 years of daily OHLC — used by the game for the daily chart view and daily 50/200 EMAs."""
     df = yf.download(yahoo_sym, interval="1d", period="2y",
                      progress=False, auto_adjust=False, threads=False)
     out = []
@@ -79,10 +79,16 @@ def fetch_daily(name, yahoo_sym):
         if hasattr(df.columns, "levels"):
             df.columns = [c[0] for c in df.columns]
         for ts, row in df.iterrows():
-            c = row.get("Close")
+            o, h, l, c = row.get("Open"), row.get("High"), row.get("Low"), row.get("Close")
             if c != c:
                 continue
-            out.append({"time": int(ts.timestamp()), "close": round(float(c), 4)})
+            v = row.get("Volume", 0)
+            out.append({"time": int(ts.timestamp()),
+                        "open": round(float(o), 4) if o == o else round(float(c), 4),
+                        "high": round(float(h), 4) if h == h else round(float(c), 4),
+                        "low": round(float(l), 4) if l == l else round(float(c), 4),
+                        "close": round(float(c), 4),
+                        "volume": int(v) if v == v else 0})
     return out
 
 
