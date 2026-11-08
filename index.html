@@ -264,7 +264,7 @@
 <script src="lightweight-charts.js"></script>
 <script>
 "use strict";
-const VERSION = "v5.4";
+const VERSION = "v5.5";
 /* =============== config / state =============== */
 const TICKS = 24;
 const INST = {
@@ -1061,13 +1061,13 @@ function syncLines(){
   const P = pal(), LS = LWC.LineStyle;
   seenLines = new Set();
   if(cfg.lvls){
-    const pm = inst().fut ? "ON" : "PM";
+    const pm = "PM";
     setLine("PDH", lv.PDH, P.gold, "PDH", LS.Dashed);
     setLine("PDL", lv.PDL, P.gold, "PDL", LS.Dashed);
     setLine("PMH", lv.PMH, P.pmcol, pm+"H", LS.Dashed);
     setLine("PML", lv.PML, P.pmcol, pm+"L", LS.Dashed);
-    setLine("ORH", lv.ORH, P.orcol, "OR H", LS.Dashed);
-    setLine("ORL", lv.ORL, P.orcol, "OR L", LS.Dashed);
+    setLine("ORH", lv.ORH, P.orcol, "ORBH", LS.Dashed);
+    setLine("ORL", lv.ORL, P.orcol, "ORBL", LS.Dashed);
     cfg.custom.forEach((p,i)=>setLine("cu"+i, p, P.lvl, "S/R", LS.Dashed));
     dailyEmaLines.forEach(d=>{ const s=emaStyle(d.slot); setLine("de"+d.slot, d.val, s.col, d.lbl, LS.Dashed, Math.min(s.w,3)); });
   }
