@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="theme-color" content="#eef1f4">
+<meta name="theme-color" content="#ffffff">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon-192.png">
 <title>Replay Trainer</title>
@@ -13,12 +13,12 @@
   :root{
     --bg:#101720; --panel:#17202b; --panel2:#1c2733; --line:#26313f;
     --text:#d8e0ea; --muted:#7a8794; --dim:#4a5663; --chartbg:#0d131b;
-    --green:#2ebd85; --green-dk:#1f8a61; --red:#f6465d; --red-dk:#b8323f;
-    --amber:#e8a33d; --blue:#5b8dbf; --accent:#6d6af0;
+    --green:#089981; --green-dk:#067a67; --red:#f23645; --red-dk:#b8323f;
+    --amber:#e8a33d; --blue:#2962ff; --accent:#2962ff;
   }
   body.light{
-    --bg:#eef1f4; --panel:#ffffff; --panel2:#e8ecf0; --line:#d2d9e0;
-    --text:#1c2733; --muted:#5a6673; --dim:#9aa5b0; --chartbg:#ffffff;
+    --bg:#f0f3fa; --panel:#ffffff; --panel2:#f0f3fa; --line:#e0e3eb;
+    --text:#131722; --muted:#6a6d78; --dim:#9598a1; --chartbg:#ffffff;
   }
   body.cb{
     --green:#2f80d8; --green-dk:#1f5fa8; --red:#e8821e; --red-dk:#b35f0e;
@@ -32,7 +32,7 @@
     display:flex; flex-direction:column;
     touch-action:manipulation; user-select:none;
   }
-  #hdr{display:flex; gap:8px; padding:8px 10px 4px;}
+  #hdr{display:flex; gap:8px; padding:6px 10px 6px;}
   .stat{flex:1; background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:6px 10px; min-width:0;}
   .stat .k{font-size:11px; color:var(--muted);}
   .stat .v{font-size:17px; font-weight:600; white-space:nowrap; overflow:hidden;}
@@ -40,22 +40,35 @@
   #posV.long{color:var(--green);} #posV.short{color:var(--red);}
   #gear{flex:0 0 44px; font-size:20px; background:var(--panel); border:1px solid var(--line);
         border-radius:8px; color:var(--muted); display:flex; align-items:center; justify-content:center;}
-  #chartWrap{flex:1; position:relative; margin:6px 10px; min-height:120px;}
-  canvas{position:absolute; inset:0; width:100%; height:100%; border:1px solid var(--line); border-radius:8px; background:var(--chartbg); touch-action:none;}
+  #tvbar{display:flex; align-items:center; gap:2px; padding:4px 8px; background:var(--panel); border-bottom:1px solid var(--line);}
+  .tvb{padding:7px 11px; border-radius:4px; font-size:14px; font-weight:600; color:var(--text); cursor:pointer; position:relative;}
+  .tvb:hover{background:var(--panel2);}
+  .tvsep{width:1px; align-self:stretch; background:var(--line); margin:3px 6px;}
+  .tfc.on{color:var(--blue);}
+  #symB{font-weight:700; font-size:15px;}
+  #symMenu{display:none; position:absolute; top:100%; left:0; z-index:30; background:var(--panel); border:1px solid var(--line);
+           border-radius:6px; box-shadow:0 4px 14px rgba(0,0,0,.15); min-width:150px; padding:4px 0;}
+  #symMenu.show{display:block;}
+  #symMenu div{padding:9px 14px; font-size:14px; font-weight:600;}
+  #symMenu div:hover{background:var(--panel2);}
+  #symMenu small{color:var(--muted); font-weight:400; margin-left:6px;}
+  #tvbar .grow{flex:1;}
+  #liveB{display:none; color:var(--blue);}
+  #chartWrap{flex:1; position:relative; margin:0; min-height:120px; border-bottom:1px solid var(--line);}
+  #chart{position:absolute; inset:0;}
+  #legend{position:absolute; top:6px; left:8px; z-index:4; pointer-events:none; font-size:13px; line-height:1.55;
+          font-family:-apple-system,BlinkMacSystemFont,"Trebuchet MS",Roboto,Ubuntu,sans-serif; color:var(--text);}
+  #lgSym{font-weight:700; font-size:14px;}
+  #legend b{font-weight:500;}
+  #lgEma span{margin-right:8px; font-size:12px;}
   #banner{
     position:absolute; top:8px; left:50%; transform:translateX(-50%);
     background:var(--red-dk); color:#fff; font-size:13px; font-weight:600;
     padding:6px 14px; border-radius:6px; display:none; z-index:5; max-width:90%; text-align:center;
   }
   #banner.warn{background:#7a5a1e; color:#ffd88a;}
-  #sessionTag{position:absolute; top:8px; left:10px; font-size:12px; font-weight:600; color:var(--muted); z-index:4;
-              background:var(--panel); border:1px solid var(--line); padding:2px 6px; border-radius:4px; opacity:.92;}
-  #chartBtns{display:flex; gap:6px; padding:4px 10px 2px;}
-  .cbtn{flex:1; padding:8px 0; text-align:center; background:var(--panel); border:1px solid var(--line);
-        border-radius:8px; color:var(--muted); font-size:14px; font-weight:700;}
-  .cbtn.tfc.on{color:var(--text); border-color:var(--blue); background:var(--panel2);}
-  #liveB{display:none; color:var(--amber); border-color:var(--amber);}
-  #speedRow{display:flex; gap:6px; padding:0 10px 6px;}
+  #sessionTag{font-size:11px; font-weight:600; color:var(--muted);}
+  #speedRow{display:flex; gap:6px; padding:6px 10px 6px;}
   .sbtn{flex:1; padding:9px 0; background:var(--panel); border:1px solid var(--line); border-radius:8px;
         color:var(--muted); font-size:13px; font-weight:600; text-align:center;}
   .sbtn.on{background:var(--panel2); color:var(--text); border-color:var(--blue);}
@@ -122,30 +135,41 @@
 </head>
 <body>
 
+<div id="tvbar">
+  <div class="tvb" id="symB"><span id="symTxt">SPY</span> ▾
+    <div id="symMenu">
+      <div data-sym="SPY">SPY<small>S&amp;P 500 ETF</small></div>
+      <div data-sym="QQQ">QQQ<small>Nasdaq 100 ETF</small></div>
+      <div data-sym="ES">ES<small>E-mini S&amp;P</small></div>
+      <div data-sym="NQ">NQ<small>E-mini Nasdaq</small></div>
+    </div>
+  </div>
+  <div class="tvsep"></div>
+  <div class="tvb tfc on" data-tf="1">1m</div>
+  <div class="tvb tfc" data-tf="5">5m</div>
+  <div class="tvb tfc" data-tf="15">15m</div>
+  <div class="tvb tfc" data-tf="D">D</div>
+  <div class="tvsep"></div>
+  <div class="tvb" id="zoomOutB" title="Zoom out">−</div>
+  <div class="tvb" id="zoomInB" title="Zoom in">+</div>
+  <div class="grow"></div>
+  <div class="tvb" id="liveB">Go to live ▸|</div>
+  <div class="tvb" id="gear" title="Settings">⚙</div>
+</div>
 <div id="hdr">
   <div class="stat"><div class="k">Balance</div><div class="v" id="balV">$10,000.00</div></div>
   <div class="stat"><div class="k">P&amp;L</div><div class="v" id="pnlV">$0.00</div></div>
   <div class="stat"><div class="k">Position</div><div class="v" id="posV">Flat</div></div>
   <div class="stat"><div class="k">Price</div><div class="v" id="pxV">—</div></div>
   <div class="stat"><div class="k">Market Time</div><div class="v" id="tmV">—</div></div>
-  <div id="gear">⚙</div>
 </div>
 
 <div id="chartWrap">
-  <canvas id="cv"></canvas>
-  <div id="sessionTag"></div>
+  <div id="chart"></div>
+  <div id="legend"><div id="lgSym"></div><div id="lgOhlc"></div><div id="lgEma"></div><div id="sessionTag"></div></div>
   <div id="banner"></div>
 </div>
 
-<div id="chartBtns">
-  <div class="cbtn tfc on" data-tf="1">1m</div>
-  <div class="cbtn tfc" data-tf="5">5m</div>
-  <div class="cbtn tfc" data-tf="15">15m</div>
-  <div class="cbtn tfc" data-tf="D">D</div>
-  <div class="cbtn" id="liveB">LIVE ▸</div>
-  <div class="cbtn" id="zoomOutB">−</div>
-  <div class="cbtn" id="zoomInB">+</div>
-</div>
 <div id="speedRow">
   <div class="sbtn" id="pauseB">⏸</div>
   <div class="sbtn spd" data-s="1">1× real</div>
@@ -188,7 +212,8 @@
   </div>
   <label class="set">Light theme <input type="checkbox" id="lightC" checked></label>
   <label class="set">Colorblind-friendly colors (blue up / orange down) <input type="checkbox" id="cbC"></label>
-  <label class="set">Trade 0DTE options (SPY/QQQ only) <input type="checkbox" id="optC" checked></label>
+  <label class="set">Trade 0DTE options (SPY/QQQ only — ES/NQ always trade as futures) <input type="checkbox" id="optC" checked></label>
+  <label class="set">Micro futures — trade MES / MNQ instead of ES / NQ <input type="checkbox" id="microC"></label>
   <label class="set">Quantity (contracts / shares) <input type="number" id="qtyIn" value="1" step="1" min="1"></label>
   <label class="set">Rulebook: premium stops (−15% soft / −25% floor) <input type="checkbox" id="pRulesC" checked></label>
   <h3>Moving averages (periods are editable)</h3>
@@ -231,9 +256,10 @@
   <button class="cardBtn ghost" id="expB">Export trade log (JSON)</button>
 </div></div>
 
+<script src="lightweight-charts.js"></script>
 <script>
 "use strict";
-const VERSION = "v4.8";
+const VERSION = "v5.0";
 /* =============== config / state =============== */
 const TICKS = 24;
 const INST = {
@@ -244,6 +270,8 @@ const INST = {
 };
 let sym = "SPY";
 const inst = () => INST[sym];
+const mult = () => inst().fut && cfg.micro ? inst().mult/10 : inst().mult;     // MES $5/pt, MNQ $2/pt
+const dispSym = () => inst().fut && cfg.micro ? "M"+sym : sym;
 const EMA_SLOTS = [ // fixed timeframes, editable periods
   {tf:5,p:5},{tf:5,p:50},{tf:5,p:200},
   {tf:15,p:5},{tf:15,p:50},{tf:15,p:200},
@@ -254,12 +282,12 @@ function emaStyle(slot){
   const L = document.body.classList.contains("light");
   const e = cfg.emas[slot];
   const col = e.p<=20 ? "#e53935" : e.p<=100 ? (L?"#111827":"#e5e7eb") : "#2962ff";
-  const w = e.tf===5 ? 1 : e.tf===15 ? 2.6 : 3.4;
+  const w = e.tf===5 ? 1 : e.tf===15 ? 2 : 3;
   return {col, w};
 }
 const cfg = { qty:1, opt:true, pRules:true, theme:"light", cb:false,
               emas: EMA_SLOTS.map(s=>({on:true, p:s.p, tf:s.tf})),
-              vol:true, lvls:true, r1545:true, struct:true, custom:[] };
+              vol:true, lvls:true, r1545:true, struct:true, micro:false, custom:[] };
 let speed = 5, paused = false, tickTimer = null;
 let sessIV = 0.2;
 let viewN = 95, viewOfs = 0, dispTf = 1;
@@ -301,19 +329,19 @@ const snap = p => +(Math.round(p/inst().tick)*inst().tick).toFixed(2);
 function pal(){
   const L = cfg.theme==="light";
   return {
-    up:  cfg.cb ? "#2f80d8" : "#2ebd85",
-    dn:  cfg.cb ? "#e8821e" : "#f6465d",
+    up:  cfg.cb ? "#2f80d8" : "#089981",
+    dn:  cfg.cb ? "#e8821e" : "#f23645",
     grid:L ? "#e6eaee" : "#1b2530",
     ax:  L ? "#8a94a0" : "#5a6673",
     axDim:L? "#bcc4cc" : "#3f4a58",
     axHi:L ? "#55606c" : "#8a97a5",
     pill:L ? "#ffffff" : "#0d131b",
     pxTxt:L? "#1c2733" : "#ffffff",
-    entry:L? "#303a46" : "#d8e0ea",
+    entry:L? "#131722" : "#d1d4dc",
     lvl: "#8a97a5",
     gold:"#c09a3e", pmcol:L?"#4d87c7":"#6ea8d8", orcol:"#b06fd8",
     div: L ? "#c3ccd5" : "#3a4654",
-    ord: "#6d6af0",
+    ord: "#2962ff",
   };
 }
 function applyTheme(){
@@ -323,7 +351,7 @@ function applyTheme(){
 function saveCfg(){
   try{ localStorage.setItem("rt_cfg", JSON.stringify({
     theme:cfg.theme, cb:cfg.cb, opt:cfg.opt, pRules:cfg.pRules, qty:cfg.qty,
-    emas:cfg.emas, vol:cfg.vol, lvls:cfg.lvls, r1545:cfg.r1545, struct:cfg.struct,
+    emas:cfg.emas, vol:cfg.vol, lvls:cfg.lvls, r1545:cfg.r1545, struct:cfg.struct, micro:cfg.micro,
     custom:cfg.custom, sym
   })); }catch(_){}
 }
@@ -339,7 +367,7 @@ function loadCfg(){
 function reflectSettings(){
   $("lightC").checked = cfg.theme==="light";
   $("cbC").checked = cfg.cb;
-  $("optC").checked = cfg.opt; $("pRulesC").checked = cfg.pRules;
+  $("optC").checked = cfg.opt; $("pRulesC").checked = cfg.pRules; $("microC").checked = !!cfg.micro;
   $("qtyIn").value = cfg.qty;
   for(let i=0;i<8;i++){ $("eOn"+i).checked = cfg.emas[i].on; $("eP"+i).value = cfg.emas[i].p; }
   $("volC").checked = cfg.vol; $("lvlC").checked = cfg.lvls;
@@ -512,7 +540,8 @@ function newSession(){
   buildEmas();
   phase = "setup";
   const tag=$("sessionTag");
-  tag.textContent = VERSION + " • " + sym + " • Session " + sessionNum + (real? " • REAL DATA • date hidden" : " • ⚠ SIMULATED DATA");
+  $("symTxt").textContent = dispSym();
+  tag.textContent = VERSION + " • Session " + sessionNum + (real? " • REAL DATA • date hidden" : " • ⚠ SIMULATED DATA");
   tag.style.color = real ? "var(--green)" : "var(--amber)";
   hideBanner(); updateHUD(); syncBrkt(); renderActions();
   paused=false; $("pauseB").textContent="⏸";
@@ -520,7 +549,7 @@ function newSession(){
 }
 function startSession(){
   if(phase!=="setup") return;
-  phase="live"; viewOfs=0;
+  phase="live"; goLive();
   startCandle();
   scheduleTick();
   renderActions(); updateHUD(); draw();
@@ -634,12 +663,12 @@ function closePos(reason, fillPx){
     pnl = (exitPrem - pos.entryPrem) * 100 * pos.qty;
     entryShown = pos.entryPrem; exitShown = +exitPrem.toFixed(2);
   } else {
-    pnl = (px - pos.entry) * pos.dir * inst().mult * pos.qty;
+    pnl = (px - pos.entry) * pos.dir * mult() * pos.qty;
     entryShown = pos.entry; exitShown = +px.toFixed(2);
   }
   realized += pnl; balance = 10000 + realized;
   const label = pos.opt ? (pos.strike + (pos.call?"C":"P")) : (pos.dir===1?"LONG":"SHORT");
-  tradeLog.push({sym, dir:label, entry:entryShown, exit:exitShown,
+  tradeLog.push({sym:dispSym(), dir:label, entry:entryShown, exit:exitShown,
                  qty:pos.qty, pnl:+pnl.toFixed(2), open:pos.openTime, close:timeStr(),
                  reason, struct:pos.structFlag});
   pos=null; syncBrkt(); renderActions(); updateHUD(); draw();
@@ -663,7 +692,7 @@ function checkStops(){
 function unrealized(){
   if(!pos || price==null) return 0;
   if(pos.opt) return (optPrem(price) - pos.entryPrem) * 100 * pos.qty;
-  return (price-pos.entry)*pos.dir*inst().mult*pos.qty;
+  return (price-pos.entry)*pos.dir*mult()*pos.qty;
 }
 
 /* =============== order entry =============== */
@@ -688,8 +717,8 @@ function renderActions(){
     a.innerHTML = '<button class="abtn neutral" id="addLvB">＋ ADD LEVEL</button>'+
                   '<button class="abtn start" id="startB">▶ START SESSION</button>';
     $("addLvB").onclick = ()=>{
-      if(!lastV) return;
-      sessLv.push(snap((lastV.lo+lastV.hi)/2));
+      const m = midPrice(); if(m==null) return;
+      sessLv.push(snap(m));
       draw();
     };
     $("startB").onclick = startSession;
@@ -750,7 +779,7 @@ function updateHUD(){
   const posEl = $("posV");
   if(pos){
     posEl.textContent = pos.opt ? (pos.qty+"× "+pos.strike+(pos.call?"C":"P"))
-                                : ((pos.dir===1?"Long ":"Short ")+pos.qty+(inst().fut?" "+sym:""));
+                                : ((pos.dir===1?"Long ":"Short ")+pos.qty+(inst().fut?" "+dispSym():""));
     posEl.className="v "+(pos.dir===1?"long":"short");
   }
   else { posEl.textContent = pend ? "Order…" : "Flat"; posEl.className="v"; }
@@ -774,6 +803,16 @@ function showBanner(msg, cls){
   clearTimeout(bannerT); bannerT=setTimeout(()=>b.style.display="none", 4000);
 }
 function hideBanner(){ $("banner").style.display="none"; }
+/* symbol menu (TV-style) */
+$("symB").addEventListener("click", e=>{ e.stopPropagation(); $("symMenu").classList.toggle("show"); });
+document.addEventListener("click", ()=>$("symMenu").classList.remove("show"));
+document.querySelectorAll("#symMenu div").forEach(el=>{
+  el.addEventListener("click", e=>{
+    e.stopPropagation(); $("symMenu").classList.remove("show");
+    const s = el.dataset.sym; if(s===sym && phase==="setup") return;
+    sym = s; pendingSym = s; saveCfg(); newSession();
+  });
+});
 
 /* =============== SL/TP panel =============== */
 function brktTarget(){ return pos || pend; }   // panel edits the live position, or the resting order's bracket
@@ -812,104 +851,351 @@ document.querySelectorAll("[data-r]").forEach(el=>{
   });
 });
 
-/* =============== chart =============== */
-const cv=$("cv"), ctx=cv.getContext("2d");
-function resize(){
-  const r=cv.parentElement.getBoundingClientRect();
-  cv.width=r.width*devicePixelRatio; cv.height=r.height*devicePixelRatio;
-  ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);
-  draw();
+/* =============== chart (TradingView Lightweight Charts) =============== */
+const LWC = window.LightweightCharts;
+const chartEl = $("chart");
+const DAY0 = Date.UTC(2001,0,1)/1000;          // synthetic dates keep the real day hidden
+const DAY1 = DAY0 + 86400;
+const DAYD = Date.UTC(1990,0,1)/1000;           // daily view: one synthetic day per real day
+const hhmm = m => String(Math.floor(m/60)).padStart(2,"0")+":"+String(((m%60)+60)%60).padStart(2,"0");
+function tvTheme(){
+  return cfg.theme==="light"
+    ? {bg:"#ffffff", text:"#131722", grid:"#f0f3fa", border:"#e0e3eb", cross:"#9598a1", lbl:"#131722"}
+    : {bg:"#131722", text:"#d1d4dc", grid:"#1e222d", border:"#2a2e39", cross:"#758696", lbl:"#363a45"};
 }
-window.addEventListener("resize", resize);
-new ResizeObserver(()=>resize()).observe(cv.parentElement);  // panel show/hide changes chart size — keep buffer in sync
-
-let dragX=null, dragOfs=0;
-const canvasY = e => e.clientY - cv.getBoundingClientRect().top;
-const priceAtY = y => lastV ? lastV.lo + (1 - y/lastV.chH)*(lastV.hi-lastV.lo) : null;
-const yAtPrice = p => lastV.chH - (p-lastV.lo)/(lastV.hi-lastV.lo)*lastV.chH;
-
-cv.addEventListener("pointerdown", e=>{
-  try{cv.setPointerCapture(e.pointerId);}catch(_){}
-  const y = canvasY(e);
-  const grab = (name, p)=>{ dragLine=name; dragOffY = y - yAtPrice(p); scaleLock = {...lastV}; };
-  if(ordMode && lastV){
-    if(Math.abs(y - yAtPrice(ordPx)) < 32){ grab("ord", ordPx); return; }
-    dragX=e.clientX; dragOfs=viewOfs; return;   // away from the line = pan
+function rgba(hex, a){
+  const h=hex.replace("#",""); const n=parseInt(h.length===3?h.split("").map(c=>c+c).join(""):h,16);
+  return `rgba(${(n>>16)&255},${(n>>8)&255},${n&255},${a})`;
+}
+let dailyCount = 0;
+function fmtTime(t){
+  if(dispTf==="D"){
+    const back = dailyCount-1 - Math.round((t-DAYD)/86400);
+    return back<=0 ? "Today" : "−"+back+"d";
   }
-  if(phase==="live" && pend && !pos && lastV){
-    const cands=[["opx",pend.px],["osl",pend.sl],["otp",pend.tp]];
-    let bn=null, bp=null, bd=24;
-    cands.forEach(([k,p])=>{ const d=Math.abs(y-yAtPrice(p)); if(d<bd){bd=d;bn=k;bp=p;} });
-    if(bn){ grab(bn, bp); return; }
-  }
-  if(phase==="setup" && lastV && sessLv.length){
-    let bi=-1, bd=28;
-    sessLv.forEach((p,i)=>{ const d=Math.abs(y-yAtPrice(p)); if(d<bd){bd=d;bi=i;} });
-    if(bi>=0){ dragLvIdx=bi; dragLastY=y; dragOffY = y - yAtPrice(sessLv[bi]); scaleLock = {...lastV}; return; }
-  }
-  if(phase==="live" && pos && lastV){
-    const dS = Math.abs(y - yAtPrice(pos.sl)), dT = Math.abs(y - yAtPrice(pos.tp));
-    if(Math.min(dS,dT) < 26){ grab(dS<=dT ? "sl" : "tp", dS<=dT ? pos.sl : pos.tp); return; }
-  }
-  dragX=e.clientX; dragOfs=viewOfs;
+  const m = Math.round(((t-DAY0)%86400)/60);
+  return hhmm(m);
+}
+const chart = LWC.createChart(chartEl, {
+  autoSize:true,
+  layout:{background:{type:"solid", color:"#ffffff"}, textColor:"#131722", fontSize:12,
+          fontFamily:"-apple-system, BlinkMacSystemFont, 'Trebuchet MS', Roboto, Ubuntu, sans-serif",
+          attributionLogo:true},
+  grid:{vertLines:{color:"#f0f3fa"}, horzLines:{color:"#f0f3fa"}},
+  crosshair:{mode:LWC.CrosshairMode.Normal},
+  rightPriceScale:{borderVisible:true, scaleMargins:{top:0.08, bottom:0.2}},
+  timeScale:{borderVisible:true, timeVisible:true, secondsVisible:false, rightOffset:8, barSpacing:7,
+             tickMarkFormatter:(t)=>fmtTime(t)},
+  localization:{timeFormatter:(t)=>fmtTime(t), priceFormatter:p=>p.toFixed(2)},
+  handleScroll:true, handleScale:true,
 });
-cv.addEventListener("pointermove", e=>{
-  const y = canvasY(e) - dragOffY;       // line stays under the grab point, TV-style
-  if(dragLine==="ord" && lastV){
-    ordPx = snap(clamp(priceAtY(y), lastV.lo, lastV.hi));
-    draw(); return;
-  }
-  if((dragLine==="opx"||dragLine==="osl"||dragLine==="otp") && pend && lastV){
-    const p = snap(clamp(priceAtY(y), lastV.lo, lastV.hi));
-    const t = inst().tick;
-    if(dragLine==="opx"){
-      const dd = p - pend.px;
-      pend.px = p; pend.sl = snap(pend.sl+dd); pend.tp = snap(pend.tp+dd);
-      const cx=$("cxOB"); if(cx) cx.textContent="✕ ORDER @ "+pend.px.toFixed(2);
-    } else if(dragLine==="osl"){
-      pend.sl = pend.dir===1 ? Math.min(p, snap(pend.px-t)) : Math.max(p, snap(pend.px+t));
-    } else {
-      pend.tp = pend.dir===1 ? Math.max(p, snap(pend.px+t)) : Math.min(p, snap(pend.px-t));
-    }
-    draw(); return;
-  }
-  if(dragLvIdx>=0 && lastV){
-    dragLastY = y;
-    sessLv[dragLvIdx] = snap(clamp(priceAtY(y), lastV.lo, lastV.hi));
-    draw(); return;
-  }
-  if(dragLine && pos && lastV){
-    let p = snap(priceAtY(y));
-    const t = inst().tick;
-    if(dragLine==="sl"){
-      p = pos.dir===1 ? Math.min(p, snap(price-t)) : Math.max(p, snap(price+t));
-      pos.sl = p; pos.r = Math.abs(pos.entry-pos.sl);
-    } else {
-      p = pos.dir===1 ? Math.max(p, snap(price+t)) : Math.min(p, snap(price-t));
-      pos.tp = p;
-    }
-    syncBrkt(); draw(); return;
-  }
-  if(dragX==null) return;
-  const bwpx = Math.max((cv.clientWidth-52)/viewN, 1);
-  viewOfs = dragOfs + (e.clientX-dragX)/bwpx;   // fractional = pixel-smooth pan; negative = blank right margin
-  draw();
+const candle = chart.addCandlestickSeries({
+  upColor:"#089981", downColor:"#f23645", borderVisible:false,
+  wickUpColor:"#089981", wickDownColor:"#f23645",
+  priceFormat:{type:"price", precision:2, minMove:0.01},
+  autoscaleInfoProvider: orig => {
+    const r = orig(); if(!r || !r.priceRange) return r;
+    const xs = [];
+    if(pos) xs.push(pos.sl, pos.tp, pos.entry);
+    if(pend) xs.push(pend.px, pend.sl, pend.tp);
+    if(ordMode && ordPx!=null) xs.push(ordPx);
+    xs.forEach(p=>{ if(p==null) return;
+      r.priceRange.minValue=Math.min(r.priceRange.minValue,p); r.priceRange.maxValue=Math.max(r.priceRange.maxValue,p); });
+    return r;
+  },
 });
-const endDrag = ()=>{
-  viewOfs = Math.round(viewOfs);
-  if(dragLvIdx>=0 && lastV && dragLastY!=null && (dragLastY<12 || dragLastY>lastV.chH-6)){
-    sessLv.splice(dragLvIdx,1);
+const volS = chart.addHistogramSeries({priceScaleId:"vol", priceFormat:{type:"volume"},
+                                        lastValueVisible:false, priceLineVisible:false});
+chart.priceScale("vol").applyOptions({scaleMargins:{top:0.84, bottom:0}, visible:false});
+let emaS = [];                    // [{slot, series, st}]
+let fullKey = "";
+let sessLen = 0;                  // # session display buckets already pushed
+let dispBars = [];                // all display bars (for legend lookups)
+let sessTimes = [];               // display time per session bucket
+
+function barTime(T, b, kind){
+  if(T==="D") return b.t;
+  return (kind==="prev" ? DAY0 : DAY1) + b.m*60;
+}
+function styleBar(b, t){
+  const P = pal();
+  const up = b.c>=b.o, col = up?P.up:P.dn;
+  const out = {time:t, open:b.o, high:b.h, low:b.l, close:b.c};
+  const a = b.pre ? 0.42 : b.prev ? 0.62 : 1;
+  if(a<1){ const c=rgba(col,a); out.color=c; out.wickColor=c; out.borderColor=c; }
+  return out;
+}
+function volBar(b, t){
+  const P = pal();
+  return {time:t, value:b.v||0, color:rgba(b.c>=b.o?P.up:P.dn, b.pre||b.prev?0.18:0.35)};
+}
+function sessAggNow(){
+  const s1 = done.concat(forming?[forming]:[]);
+  return aggBars(s1, dispTf, 570, {}, "start");
+}
+function liveDailyBar(){
+  const s = done.concat(forming?[forming]:[]);
+  if(!s.length) return null;
+  return {o:s[0].o, h:Math.max(...s.map(b=>b.h)), l:Math.min(...s.map(b=>b.l)),
+          c:s[s.length-1].c, v:s.reduce((a,b)=>a+(b.v||0),0), t:DAYD+(dailyCount-1)*86400};
+}
+function emaValAt(st, j){
+  if(!st.series.length) return null;
+  return st.series[Math.min((j+1)*dispTf-1, st.series.length-1)];
+}
+
+function chartFull(){
+  const P = pal(), th = tvTheme(), T = dispTf;
+  chart.applyOptions({
+    layout:{background:{type:"solid", color:th.bg}, textColor:th.text},
+    grid:{vertLines:{color:th.grid}, horzLines:{color:th.grid}},
+    rightPriceScale:{borderColor:th.border}, timeScale:{borderColor:th.border},
+    crosshair:{vertLine:{color:th.cross, labelBackgroundColor:th.lbl}, horzLine:{color:th.cross, labelBackgroundColor:th.lbl}},
+  });
+  candle.applyOptions({upColor:P.up, downColor:P.dn, wickUpColor:P.up, wickDownColor:P.dn});
+  volS.applyOptions({visible:!!cfg.vol});
+  const prec = inst().tick<0.1 ? 2 : 2;
+  candle.applyOptions({priceFormat:{type:"price", precision:prec, minMove:inst().tick}});
+
+  let cBars=[], vBars=[];
+  dispBars=[]; sessTimes=[];
+  if(T==="D"){
+    const dd = (dailyBySym[sym]||[]).filter(r=>!D.date || r.d < D.date);
+    dailyCount = dd.length + 1;
+    dd.forEach((r,i)=>{
+      const b={o:r.o??r.c, h:r.h??r.c, l:r.l??r.c, c:r.c, v:r.v||0, t:DAYD+i*86400};
+      dispBars.push(b); cBars.push(styleBar(b,b.t)); vBars.push(volBar(b,b.t));
+    });
+    const lb = liveDailyBar();
+    if(lb){ dispBars.push(lb); cBars.push(styleBar(lb,lb.t)); vBars.push(volBar(lb,lb.t)); }
+    sessLen = lb?1:0;
+  } else {
+    const prev = aggBars(D.prior, T, 570, {prev:true}, "start");
+    const pre  = aggBars(D.pre,  T, 570 - D.pre.length, {pre:true}, "end");
+    const sess = sessAggNow();
+    let lastT = -Infinity;
+    const push=(b,kind)=>{ let t=barTime(T,b,kind); if(t<=lastT) t=lastT+60; lastT=t;
+      b.t=t; dispBars.push(b); cBars.push(styleBar(b,t)); vBars.push(volBar(b,t)); return t; };
+    prev.forEach(b=>push(b,"prev"));
+    pre.forEach(b=>push(b,"pre"));
+    sess.forEach(b=>sessTimes.push(push(b,"sess")));
+    sessLen = sess.length;
   }
-  if(dragLine==="sl"||dragLine==="tp") checkStops();
-  dragLine=null; dragLvIdx=-1; dragLastY=null; dragX=null;
-  dragOffY=0; scaleLock=null;
-  draw();
+  candle.setData(cBars);
+  volS.setData(cfg.vol ? vBars : []);
+
+  // EMA series
+  emaS.forEach(e=>chart.removeSeries(e.series)); emaS=[];
+  if(T!=="D") emaLive.forEach(st=>{
+    const sty = emaStyle(st.slot);
+    const s = chart.addLineSeries({color:sty.col, lineWidth:sty.w, priceLineVisible:false,
+                                   lastValueVisible:false, crosshairMarkerVisible:false, title:""});
+    const pts=[];
+    for(let j=0;j<sessTimes.length;j++){ const v=emaValAt(st,j); if(v!=null) pts.push({time:sessTimes[j], value:v}); }
+    s.setData(pts);
+    emaS.push({slot:st.slot, series:s, st});
+  });
+  plines.forEach(v=>candle.removePriceLine(v.line)); plines.clear();
+  syncLines();
+  const n = cBars.length;
+  chart.timeScale().setVisibleLogicalRange({from:Math.max(0,n-(T==="D"?90:110)), to:n+6});
+  updateLegend(null);
+}
+
+function chartTick(){
+  const T = dispTf;
+  if(T==="D"){
+    const lb = liveDailyBar(); if(!lb) return;
+    if(!sessLen){ dispBars.push(lb); sessLen=1; } else dispBars[dispBars.length-1]=lb;
+    candle.update(styleBar(lb,lb.t)); if(cfg.vol) volS.update(volBar(lb,lb.t));
+    return;
+  }
+  const sess = sessAggNow();
+  if(!sess.length) return;
+  const from = Math.max(0, Math.min(sessLen, sess.length)-1);
+  for(let j=from;j<sess.length;j++){
+    let t;
+    if(j<sessTimes.length) t=sessTimes[j];
+    else { const last = dispBars.length? dispBars[dispBars.length-1].t : DAY1;
+           t = Math.max(DAY1 + sess[j].m*60, last+60); sessTimes.push(t); }
+    const b = sess[j]; b.t=t;
+    const di = dispBars.length - sessLen + j;
+    if(j<sessLen) dispBars[di]=b; else dispBars.push(b);
+    candle.update(styleBar(b,t));
+    if(cfg.vol) volS.update(volBar(b,t));
+    emaS.forEach(e=>{ const v=emaValAt(e.st,j); if(v!=null) e.series.update({time:t, value:v}); });
+  }
+  sessLen = sess.length;
+}
+
+/* ---- price lines (levels, orders, position) ---- */
+const plines = new Map();
+let seenLines = null;
+function setLine(key, price, color, title, style, width){
+  if(price==null || !isFinite(price)) return;
+  seenLines.add(key);
+  const o = {price, color, title, lineStyle:style, lineWidth:width||1, axisLabelVisible:true,
+             axisLabelColor:color, axisLabelTextColor:"#ffffff"};
+  const ex = plines.get(key);
+  if(ex){
+    if(ex.o.price!==price || ex.o.title!==title || ex.o.color!==color || ex.o.lineWidth!==o.lineWidth){
+      ex.line.applyOptions(o); ex.o=o; }
+  } else plines.set(key, {line:candle.createPriceLine(o), o});
+}
+function pnlAt(px){
+  if(!pos) return 0;
+  if(pos.opt) return (Math.max(bsPrice(px,pos.strike,minsToClose(),pos.iv,pos.call),0.01)-pos.entryPrem)*100*pos.qty;
+  return (px-pos.entry)*pos.dir*mult()*pos.qty;
+}
+const sgn$ = v => (v>=0?"+$":"−$")+Math.abs(v).toFixed(0);
+function syncLines(){
+  const P = pal(), LS = LWC.LineStyle;
+  seenLines = new Set();
+  if(cfg.lvls){
+    const pm = inst().fut ? "ON" : "PM";
+    setLine("PDH", lv.PDH, P.gold, "PDH", LS.Dashed);
+    setLine("PDL", lv.PDL, P.gold, "PDL", LS.Dashed);
+    setLine("PMH", lv.PMH, P.pmcol, pm+"H", LS.Dashed);
+    setLine("PML", lv.PML, P.pmcol, pm+"L", LS.Dashed);
+    setLine("ORH", lv.ORH, P.orcol, "OR H", LS.Dashed);
+    setLine("ORL", lv.ORL, P.orcol, "OR L", LS.Dashed);
+    cfg.custom.forEach((p,i)=>setLine("cu"+i, p, P.lvl, "S/R", LS.Dashed));
+    dailyEmaLines.forEach(d=>{ const s=emaStyle(d.slot); setLine("de"+d.slot, d.val, s.col, d.lbl, LS.Dashed, Math.min(s.w,3)); });
+  }
+  sessLv.forEach((p,i)=>setLine("sl"+i, p, P.lvl, (phase==="setup"?"⇕ ":"")+"LVL", LS.LargeDashed, phase==="setup"?2:1));
+  if(pos){
+    setLine("pE", pos.entry, P.entry, (pos.dir===1?"Long ":"Short ")+pos.qty+"  "+sgn$(unrealized()), LS.Solid, 1);
+    setLine("pS", pos.sl, P.dn, "⇕ SL  "+sgn$(pnlAt(pos.sl)), LS.Dashed, 2);
+    setLine("pT", pos.tp, P.up, "⇕ TP  "+sgn$(pnlAt(pos.tp)), LS.Dashed, 2);
+  }
+  if(pend){
+    setLine("oP", pend.px, P.ord, "⇕ "+(pend.dir===1?"BUY":"SELL")+" LMT", LS.Solid, 2);
+    setLine("oS", pend.sl, P.dn, "⇕ SL", LS.Dashed, 2);
+    setLine("oT", pend.tp, P.up, "⇕ TP", LS.Dashed, 2);
+  }
+  if(ordMode && ordPx!=null) setLine("ord", ordPx, P.ord, "⇕ Entry", LS.Solid, 2);
+  for(const [k,v] of plines) if(!seenLines.has(k)){ candle.removePriceLine(v.line); plines.delete(k); }
+}
+
+/* ---- draw(): cheap per-tick refresh; full rebuild when the view's inputs change ---- */
+function draw(){
+  if(!D) return;
+  const key = [sessionNum, dispTf, sym, cfg.theme, cfg.cb, cfg.vol, JSON.stringify(cfg.emas),
+               (dailyBySym[sym]||[]).length].join("|");
+  if(key!==fullKey){ fullKey=key; chartFull(); }
+  else { chartTick(); syncLines(); }
+  if(!legendHover) updateLegend(null);
+  const lb=$("liveB"); const sp = chart.timeScale().scrollPosition();
+  const show = sp < -3 ? "block" : "none"; if(lb.style.display!==show) lb.style.display=show;
+}
+function goLive(){ chart.timeScale().scrollToRealTime(); }
+chart.timeScale().subscribeVisibleLogicalRangeChange(()=>{
+  const lb=$("liveB"); const show = chart.timeScale().scrollPosition() < -3 ? "block" : "none";
+  if(lb.style.display!==show) lb.style.display=show;
+});
+
+/* ---- TradingView-style legend (top-left) ---- */
+let legendHover = false;
+function updateLegend(param){
+  let b = null;
+  if(param && param.time!=null && param.seriesData){
+    const d = param.seriesData.get(candle);
+    if(d) b = {o:d.open, h:d.high, l:d.low, c:d.close, t:param.time};
+  }
+  legendHover = !!b;
+  if(!b){ const x = dispBars[dispBars.length-1]; if(x) b={o:x.o,h:x.h,l:x.l,c:x.c,t:x.t}; }
+  const tfTxt = dispTf==="D" ? "1D" : dispTf+"m";
+  $("lgSym").textContent = dispSym() + " · " + tfTxt;
+  $("symTxt").textContent = dispSym();
+  if(!b){ $("lgOhlc").innerHTML=""; $("lgEma").innerHTML=""; return; }
+  const P = pal(), up = b.c>=b.o, col = up?P.up:P.dn;
+  const ch = b.c-b.o, pct = b.o? ch/b.o*100 : 0;
+  const v = x => `<b style="color:${col}">${x.toFixed(2)}</b>`;
+  $("lgOhlc").innerHTML = `O ${v(b.o)} H ${v(b.h)} L ${v(b.l)} C ${v(b.c)} `+
+    `<b style="color:${col}">${ch>=0?"+":""}${ch.toFixed(2)} (${ch>=0?"+":""}${pct.toFixed(2)}%)</b>`;
+  let em = "";
+  emaS.forEach(e=>{
+    let val = null;
+    if(param && param.seriesData){ const d=param.seriesData.get(e.series); if(d) val=d.value; }
+    if(val==null && !legendHover) val = e.st.val;
+    if(val==null) return;
+    const s = emaStyle(e.slot);
+    em += `<span style="color:${s.col}">EMA ${e.st.p} (${e.st.tf}m) <b>${val.toFixed(2)}</b></span> `;
+  });
+  $("lgEma").innerHTML = em;
+}
+chart.subscribeCrosshairMove(p=>updateLegend(p));
+
+/* ---- dragging lines (SL / TP / order / setup levels). Away from a line = normal chart pan/zoom ---- */
+let drag = null;   // {kind, idx, offY}
+const paneH = () => chartEl.clientHeight - chart.timeScale().height();
+const yOf = p => candle.priceToCoordinate(p);
+const pOf = y => candle.coordinateToPrice(y);
+function midPrice(){ const p = pOf(paneH()/2); return p!=null ? p : price; }
+function hitLine(y){
+  const c = [];
+  if(ordMode && ordPx!=null) c.push(["ord", ordPx]);
+  if(phase==="live" && pend && !pos) c.push(["opx",pend.px],["osl",pend.sl],["otp",pend.tp]);
+  if(phase==="live" && pos) c.push(["sl",pos.sl],["tp",pos.tp]);
+  if(phase==="setup") sessLv.forEach((p,i)=>c.push(["lvl",p,i]));
+  let best=null, bd=22;
+  c.forEach(([k,p,i])=>{ const yy=yOf(p); if(yy==null) return; const d=Math.abs(y-yy); if(d<bd){ bd=d; best={kind:k, idx:i, offY:y-yy}; } });
+  return best;
+}
+function lockChart(on){
+  chart.applyOptions({handleScroll:!on, handleScale:!on});
+  chart.priceScale("right").applyOptions({autoScale:!on});
+}
+chartEl.addEventListener("pointerdown", e=>{
+  const r = chartEl.getBoundingClientRect();
+  const x = e.clientX - r.left, y = e.clientY - r.top;
+  if(x > chartEl.clientWidth - chart.priceScale("right").width() || y > paneH()) return; // axes keep TV behavior
+  const h = hitLine(y);
+  if(!h) return;
+  drag = h; lockChart(true);
+  try{ chartEl.setPointerCapture(e.pointerId); }catch(_){}
+  e.stopPropagation(); e.preventDefault();
+}, {capture:true});
+chartEl.addEventListener("pointermove", e=>{
+  if(!drag) return;
+  const r = chartEl.getBoundingClientRect();
+  const y = e.clientY - r.top - drag.offY;
+  const raw = pOf(y); if(raw==null) return;
+  const p = snap(raw), t = inst().tick;
+  if(drag.kind==="ord") ordPx = p;
+  else if(drag.kind==="opx" && pend){ const dd=p-pend.px; pend.px=p; pend.sl=snap(pend.sl+dd); pend.tp=snap(pend.tp+dd);
+    const cx=$("cxOB"); if(cx) cx.textContent="✕ ORDER @ "+pend.px.toFixed(2); }
+  else if(drag.kind==="osl" && pend) pend.sl = pend.dir===1 ? Math.min(p, snap(pend.px-t)) : Math.max(p, snap(pend.px+t));
+  else if(drag.kind==="otp" && pend) pend.tp = pend.dir===1 ? Math.max(p, snap(pend.px+t)) : Math.min(p, snap(pend.px-t));
+  else if(drag.kind==="sl" && pos){ pos.sl = pos.dir===1 ? Math.min(p, snap(price-t)) : Math.max(p, snap(price+t)); pos.r=Math.abs(pos.entry-pos.sl); syncBrkt(); }
+  else if(drag.kind==="tp" && pos){ pos.tp = pos.dir===1 ? Math.max(p, snap(price+t)) : Math.min(p, snap(price-t)); syncBrkt(); }
+  else if(drag.kind==="lvl"){ sessLv[drag.idx]=p; drag.lastY = e.clientY - r.top; }
+  syncLines();
+  e.stopPropagation();
+}, {capture:true});
+const endDrag = e=>{
+  if(!drag) return;
+  if(drag.kind==="lvl" && drag.lastY!=null && (drag.lastY<12 || drag.lastY>paneH()-6)) sessLv.splice(drag.idx,1);
+  if(drag.kind==="sl"||drag.kind==="tp") checkStops();
+  drag=null; lockChart(false);
+  syncLines();
 };
-cv.addEventListener("pointerup", endDrag);
-cv.addEventListener("pointercancel", endDrag);
-$("liveB").addEventListener("click", ()=>{ viewOfs=0; draw(); });
-$("zoomInB").addEventListener("click", ()=>{ viewN=clamp(Math.round(viewN/1.4),40,260); draw(); });
-$("zoomOutB").addEventListener("click", ()=>{ viewN=clamp(Math.round(viewN*1.4),40,260); draw(); });
+// the chart library listens to mouse/touch events (not pointer events): swallow them while a line is held
+["mousedown","mousemove","mouseup","touchstart","touchmove","touchend","wheel","dblclick"].forEach(t=>
+  chartEl.addEventListener(t, e=>{ if(drag){ e.stopPropagation(); if(t!=="mouseup"&&t!=="touchend"&&e.cancelable) e.preventDefault(); } },
+                           {capture:true, passive:false}));
+chartEl.addEventListener("pointerup", endDrag, {capture:true});
+chartEl.addEventListener("pointercancel", endDrag, {capture:true});
+chartEl.addEventListener("pointermove", e=>{   // grab cursor hint over draggable lines (desktop)
+  if(drag || e.pointerType!=="mouse") return;
+  const r = chartEl.getBoundingClientRect();
+  chartEl.style.cursor = hitLine(e.clientY - r.top) ? "ns-resize" : "";
+});
+
+$("liveB").addEventListener("click", goLive);
+function zoomBy(f){ const ts=chart.timeScale(); ts.applyOptions({barSpacing:clamp(ts.options().barSpacing*f, 1.5, 40)}); }
+$("zoomInB").addEventListener("click", ()=>zoomBy(1.35));
+$("zoomOutB").addEventListener("click", ()=>zoomBy(1/1.35));
 document.querySelectorAll(".tfc").forEach(el=>{
   el.addEventListener("click", ()=>{
     const tf = el.dataset.tf==="D" ? "D" : +el.dataset.tf;
@@ -920,16 +1206,9 @@ document.querySelectorAll(".tfc").forEach(el=>{
     document.querySelectorAll(".tfc").forEach(x=>x.classList.remove("on"));
     el.classList.add("on");
     dispTf = tf;
-    viewOfs = 0;
     draw();
   });
 });
-// mouse-wheel zoom (desktop): scroll down = zoom out, up = zoom in
-cv.addEventListener("wheel", e=>{
-  e.preventDefault();
-  viewN = clamp(Math.round(viewN * (e.deltaY>0 ? 1.15 : 1/1.15)), 40, 260);
-  draw();
-}, {passive:false});
 
 /* aggregate 1m bars into display-timeframe buckets.
    "start": aligned to segment start (prior day & session open at :30, clock-aligned)
@@ -953,216 +1232,6 @@ function aggBars(bars, T, m0, flags, mode){
               c:g[g.length-1].c, v:g.reduce((a,b)=>a+(b.v||0),0), m:m0+i, ...flags});
   }
   return out;
-}
-
-function draw(){
-  const W=cv.width/devicePixelRatio, H=cv.height/devicePixelRatio;
-  if(!W||!D) return;
-  const P = pal();
-  ctx.clearRect(0,0,W,H);
-  const axW=52, volH = cfg.vol ? H*0.16 : 0;
-  const chW=W-axW, chH=H-volH-6;
-  const T = dispTf;
-
-  let prevAgg=[], preAgg=[], sessAgg=[], all, sessStart;
-  if(T==="D"){
-    // daily chart: real daily history up to the hidden day, plus today's candle building live
-    const dd = (dailyBySym[sym]||[]).filter(r=>!D.date || r.d < D.date);
-    all = dd.map(r=>({o:r.o??r.c, h:r.h??r.c, l:r.l??r.c, c:r.c, v:r.v||0, m:null}));
-    const s = done.concat(forming?[forming]:[]);
-    if(s.length){
-      all = all.concat([{o:s[0].o, h:Math.max(...s.map(b=>b.h)), l:Math.min(...s.map(b=>b.l)),
-                         c:s[s.length-1].c, v:0, m:null, live:true}]);
-    }
-    sessStart = all.length;
-  } else {
-    const sess1m = done.concat(forming?[forming]:[]);
-    prevAgg = aggBars(D.prior, T, 570, {prev:true}, "start");
-    preAgg  = aggBars(D.pre,  T, 570 - D.pre.length, {pre:true}, "end");
-    sessAgg = aggBars(sess1m, T, 570, {}, "start");
-    if(sessAgg.length && (forming || sess1m.length % T !== 0)) sessAgg[sessAgg.length-1].live=true;
-    all = prevAgg.concat(preAgg, sessAgg);
-    sessStart = prevAgg.length + preAgg.length;
-  }
-
-  const NV = viewN;
-  const maxOfs = Math.max(0, all.length - NV);
-  if(viewOfs > maxOfs) viewOfs = maxOfs;
-  if(viewOfs < -(NV-8)) viewOfs = -(NV-8);   // keep at least a few candles on screen
-  const oInt = Math.round(viewOfs);
-  const lb=$("liveB"), lshow = oInt!==0 ? "block" : "none";
-  if(lb.style.display !== lshow) lb.style.display = lshow;
-  const end = all.length - oInt;
-  const start = Math.max(0, end - NV);
-  const vis = all.slice(start, end);
-  if(!vis.length) return;
-  const bw = chW/NV;
-  const xSh = (viewOfs - oInt)*bw;   // sub-candle shift while panning
-
-  // y-range
-  let lo=Infinity, hi=-Infinity;
-  vis.forEach(b=>{ lo=Math.min(lo,b.l); hi=Math.max(hi,b.h); });
-  if(pos){ lo=Math.min(lo,pos.sl,pos.tp); hi=Math.max(hi,pos.sl,pos.tp); }
-  if(pend){ lo=Math.min(lo,pend.px,pend.sl,pend.tp); hi=Math.max(hi,pend.px,pend.sl,pend.tp); }
-  const pad=(hi-lo)*0.07||1; lo-=pad; hi+=pad;
-  if(scaleLock){ lo=scaleLock.lo; hi=scaleLock.hi; }  // no rescaling under an active drag
-  const Y=p=>chH-(p-lo)/(hi-lo)*chH;
-  lastV = {lo, hi, chH};
-
-  // gridlines + price axis
-  ctx.font="10px system-ui"; ctx.fillStyle=P.ax; ctx.strokeStyle=P.grid; ctx.lineWidth=1;
-  const stepP=niceStep((hi-lo)/6);
-  for(let p=Math.ceil(lo/stepP)*stepP; p<hi; p+=stepP){
-    const y=Y(p);
-    ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(chW,y); ctx.stroke();
-    ctx.fillText(p.toFixed(2), chW+4, y+3);
-  }
-
-  // session divider + time axis
-  const cadence = T===1?15 : T===5?30 : 60;
-  const cadPrior = T===1?60 : T===5?60 : 120;
-  for(let vi=0; vi<vis.length; vi++){
-    const idx = start + vi, x = vi*bw + bw/2 + xSh, b = vis[vi];
-    if(b.m==null){                       // daily view: relative day labels, no dates
-      const back = all.length-1-idx;
-      if(back>0 && back%10===0){
-        ctx.fillStyle=P.ax; ctx.fillText("−"+back+"d", x-10, H-3);
-      }
-      continue;
-    }
-    if(idx === prevAgg.length && idx>0){
-      ctx.strokeStyle=P.div; ctx.setLineDash([3,4]);
-      ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,chH); ctx.stroke(); ctx.setLineDash([]);
-      ctx.fillStyle=P.ax; ctx.fillText("‹ prev day", x+3, 12);
-    }
-    const m = b.m;
-    if(m % (b.prev?cadPrior:cadence) !== 0) continue;
-    ctx.strokeStyle=P.grid;
-    ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,chH); ctx.stroke();
-    const hh=Math.floor(m/60), mm=((m%60)+60)%60;
-    ctx.fillStyle = (idx===sessStart) ? P.axHi : b.prev ? P.axDim : P.ax;
-    ctx.fillText(String(hh).padStart(2,"0")+":"+String(mm).padStart(2,"0"), x-14, H-3);
-  }
-
-  // levels (auto + standing + daily EMAs)
-  if(cfg.lvls){
-    const pm = inst().fut ? "ON" : "PM";
-    const items=[["PDH",lv.PDH,P.gold],["PDL",lv.PDL,P.gold],[pm+"H",lv.PMH,P.pmcol],
-                 [pm+"L",lv.PML,P.pmcol],["OR H",lv.ORH,P.orcol],["OR L",lv.ORL,P.orcol]];
-    cfg.custom.forEach(p=>items.push(["S/R",p,P.lvl,1]));
-    dailyEmaLines.forEach(d=>{ const s=emaStyle(d.slot); items.push([d.lbl, d.val, s.col, s.w]); });
-    items.forEach(([name,p,col,w])=>{
-      if(p==null||p<lo||p>hi) return;
-      const y=Y(p);
-      ctx.strokeStyle=col; ctx.lineWidth=w||1; ctx.setLineDash([5,4]); ctx.globalAlpha=0.65;
-      ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(chW,y); ctx.stroke();
-      ctx.setLineDash([]); ctx.globalAlpha=1; ctx.lineWidth=1;
-      ctx.fillStyle=col; ctx.fillText(name+" "+p.toFixed(2), 6, y-3);
-    });
-  }
-  // session-marked levels
-  sessLv.forEach(p=>{
-    if(p<lo||p>hi) return;
-    const y=Y(p);
-    ctx.strokeStyle=P.lvl; ctx.setLineDash([7,3]); ctx.lineWidth=phase==="setup"?1.8:1.1;
-    ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(chW,y); ctx.stroke(); ctx.setLineDash([]); ctx.lineWidth=1;
-    ctx.fillStyle=P.lvl;
-    ctx.fillText((phase==="setup"?"⇕ ":"")+"LVL "+p.toFixed(2), chW-78, y-3);
-  });
-
-  // volume
-  if(cfg.vol){
-    const vmax=Math.max(...vis.map(b=>b.v||1));
-    ctx.globalAlpha=0.35;
-    vis.forEach((b,i)=>{
-      const x=i*bw+xSh;
-      ctx.fillStyle = b.c>=b.o ? P.up : P.dn;
-      const h=(b.v/vmax)*(volH-6);
-      ctx.fillRect(x+bw*0.15, H-h, bw*0.7, h);
-    });
-    ctx.globalAlpha=1;
-  }
-
-  // candles
-  vis.forEach((b,i)=>{
-    const x=i*bw+bw/2+xSh;
-    const up=b.c>=b.o;
-    const col = up?P.up:P.dn;
-    ctx.globalAlpha = b.pre?0.42 : b.prev?0.62 : 1;
-    ctx.strokeStyle=col; ctx.fillStyle=col; ctx.lineWidth=1;
-    ctx.beginPath(); ctx.moveTo(x,Y(b.h)); ctx.lineTo(x,Y(b.l)); ctx.stroke();
-    const y1=Y(Math.max(b.o,b.c)), y2=Y(Math.min(b.o,b.c));
-    ctx.fillRect(x-bw*0.32, y1, bw*0.64, Math.max(y2-y1,1));
-  });
-  ctx.globalAlpha=1;
-
-  // intraday EMAs: value per display bucket = engine value at bucket's last completed 1m bar
-  if(T!=="D") emaLive.forEach(st=>{
-    if(!st.series.length) return;
-    const sty = emaStyle(st.slot);
-    ctx.strokeStyle=sty.col; ctx.lineWidth=sty.w; ctx.beginPath();
-    let started=false, lastXY=null;
-    for(let j=0;j<sessAgg.length;j++){
-      const g = sessStart + j;
-      const vi = g - start;
-      if(vi<0 || vi>=vis.length) continue;
-      const si = Math.min((j+1)*T-1, st.series.length-1);
-      const v = st.series[si];
-      if(v==null) continue;
-      const x=vi*bw+bw/2+xSh, y=Y(v);
-      if(y<-20||y>chH+20) continue;
-      if(!started){ ctx.moveTo(x,y); started=true; } else ctx.lineTo(x,y);
-      lastXY=[x,y];
-    }
-    ctx.stroke(); ctx.lineWidth=1;
-    if(lastXY){
-      ctx.fillStyle=sty.col; ctx.fillText(st.lbl, Math.min(lastXY[0]+5, chW-46), lastXY[1]-3);
-    }
-  });
-
-  // position / order lines
-  function tagLine(p,col,nm,drag){
-    if(p<lo||p>hi) return;
-    const y=Y(p);
-    ctx.strokeStyle=col; ctx.setLineDash([2,3]); ctx.lineWidth=drag?1.6:1.1;
-    ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(chW,y); ctx.stroke(); ctx.setLineDash([]);
-    ctx.font="bold 11px system-ui";
-    const txt = drag ? "⇕ "+nm+" "+p.toFixed(2) : nm+" "+p.toFixed(2);
-    const w = ctx.measureText(txt).width+14;
-    const hp = drag?13:9;
-    ctx.fillStyle=P.pill;
-    ctx.fillRect(chW-w-8, y-hp, w, hp*2);
-    ctx.strokeStyle=col; ctx.lineWidth=1; ctx.strokeRect(chW-w-8, y-hp, w, hp*2);
-    ctx.fillStyle=col; ctx.fillText(txt, chW-w-1, y+4);
-    ctx.font="10px system-ui";
-  }
-  if(pos){
-    tagLine(pos.entry,P.entry,"Entry",false);
-    tagLine(pos.sl,P.dn,"SL",true);
-    tagLine(pos.tp,P.up,"TP",true);
-  }
-  if(pend){
-    tagLine(pend.px,P.ord,"ORDER",true);
-    tagLine(pend.sl,P.dn,"SL",true);
-    tagLine(pend.tp,P.up,"TP",true);
-  }
-  if(ordMode && ordPx!=null) tagLine(ordPx,P.ord,"Entry",true);
-
-  // last price marker
-  if(price!=null){
-    const y=Y(price);
-    ctx.fillStyle=P.pill;
-    ctx.fillRect(chW, y-8, axW, 16);
-    ctx.strokeStyle=P.axHi; ctx.strokeRect(chW, y-8, axW-1, 16);
-    ctx.fillStyle=P.pxTxt; ctx.font="bold 11px system-ui";
-    ctx.fillText(price.toFixed(2), chW+4, y+4);
-    ctx.font="10px system-ui";
-  }
-}
-function niceStep(raw){
-  const p=Math.pow(10,Math.floor(Math.log10(raw)));
-  const n=raw/p;
-  return (n<1.5?1:n<3.5?2.5:n<7.5?5:10)*p;
 }
 
 /* =============== stats =============== */
@@ -1302,7 +1371,7 @@ function applySettings(){
   cfg.qty = clamp(+$("qtyIn").value||1, 1, 100000);
   cfg.theme = $("lightC").checked ? "light" : "dark";
   cfg.cb = $("cbC").checked;
-  cfg.opt=$("optC").checked; cfg.pRules=$("pRulesC").checked;
+  cfg.opt=$("optC").checked; cfg.pRules=$("pRulesC").checked; cfg.micro=$("microC").checked;
   for(let i=0;i<8;i++){
     cfg.emas[i].on = $("eOn"+i).checked;
     cfg.emas[i].p = clamp(Math.round(+$("eP"+i).value)||EMA_SLOTS[i].p, 2, 400);
@@ -1345,7 +1414,6 @@ $("expB").addEventListener("click", ()=>{
 /* =============== boot =============== */
 loadCfg();
 applyTheme();
-resize();
 newSession();
 if(location.protocol==="https:" && "serviceWorker" in navigator){
   navigator.serviceWorker.register("sw.js").catch(()=>{});

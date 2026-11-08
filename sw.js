@@ -1,7 +1,7 @@
 /* Replay Trainer service worker — makes the installed app work fully offline.
    Network-first so updates flow through automatically when online. */
-const CACHE = "replay-trainer-v2";
-const ASSETS = ["./", "index.html", "manifest.webmanifest", "icon-192.png", "icon-512.png"];
+const CACHE = "replay-trainer-v3";
+const ASSETS = ["./", "index.html", "manifest.webmanifest", "icon-192.png", "icon-512.png", "lightweight-charts.js"];
 
 self.addEventListener("install", e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)).then(() => self.skipWaiting()));
