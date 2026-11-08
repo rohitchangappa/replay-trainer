@@ -259,7 +259,7 @@
 <script src="lightweight-charts.js"></script>
 <script>
 "use strict";
-const VERSION = "v5.0";
+const VERSION = "v5.1";
 /* =============== config / state =============== */
 const TICKS = 24;
 const INST = {
@@ -751,7 +751,7 @@ function renderActions(){
 function updateHint(){
   const h=$("brktHint");
   if(phase==="setup"){
-    h.textContent = "Mark your levels: pan/zoom the prior day & premarket, ＋ ADD LEVEL drops a line (drag to place, drag off-chart to delete), then START SESSION.";
+    h.textContent = "Mark your levels: pan/zoom the prior day & premarket, ＋ ADD LEVEL drops a line (drag to place, drag off-chart to delete), then START SESSION (or Space).";
   } else if(ordMode){
     h.textContent = "Drag the entry line to your price (touch away from it to pan), then BUY or SELL. At market it fills instantly; away from it, the order rests with an SL/TP bracket.";
   } else if(pend){
@@ -759,7 +759,7 @@ function updateHint(){
   } else if(pos){
     h.style.display="none"; return;
   } else {
-    h.textContent = "⊕ TRADE opens an entry line on the chart. Stop-loss & take-profit arm on fill — drag their lines, or use Struct / Breakeven / 1R-2R-3R.";
+    h.textContent = "Keys: Shift+B buy · Shift+S sell · Shift+F flatten · Space pause · → next bar · Esc cancel.  ⊕ TRADE opens an entry line — drag it, then Shift+B / Shift+S.";
   }
   h.style.display="block";
 }
@@ -1351,6 +1351,46 @@ document.querySelectorAll(".spd").forEach(el=>{
     el.classList.add("on"); speed=+el.dataset.s;
     if(!paused) scheduleTick();
   });
+});
+/* keyboard shortcuts (TradingView-style): Shift+B buy, Shift+S sell, Shift+F flatten,
+   Space play/pause (or START), → next bar, Esc cancel entry line / resting order */
+document.addEventListener("keydown", e=>{
+  const tg = e.target && e.target.tagName;
+  if(tg==="INPUT" || tg==="TEXTAREA" || tg==="SELECT") return;
+  if(document.querySelector(".overlay.show")) return;
+  const k = e.code;
+  if(e.shiftKey && (k==="KeyB" || k==="KeyS")){
+    e.preventDefault();
+    if(phase!=="live" || dayOver || price==null) return;
+    const dir = k==="KeyB" ? 1 : -1;
+    if(pos){
+      if(pos.dir!==dir){ closePos("Hotkey "+(dir===1?"Shift+B":"Shift+S")); showBanner("Position closed (hotkey)","warn"); }
+      return;                                   // one position at a time — no adds
+    }
+    if(ordMode){ placeOrder(dir); return; }     // entry line out: order at the line's price
+    if(pend){ showBanner("Cancel the resting order first (Esc)","warn"); return; }
+    openPos(dir, price);
+    showBanner((dir===1?"Bought":"Sold")+" "+cfg.qty+" at market "+price.toFixed(2),"warn");
+    return;
+  }
+  if(e.shiftKey && (k==="KeyF" || k==="KeyX")){
+    e.preventDefault();
+    if(pend){ pend=null; syncBrkt(); }
+    if(pos) closePos("Hotkey flatten");
+    ordMode=false; ordPx=null; renderActions(); draw();
+    return;
+  }
+  if(e.shiftKey || e.ctrlKey || e.altKey || e.metaKey) return;
+  if(k==="Space"){
+    e.preventDefault();
+    if(phase==="setup"){ startSession(); return; }
+    $("pauseB").click(); return;
+  }
+  if(k==="ArrowRight" && phase==="live"){ e.preventDefault(); runFast(TICKS - tickIdx); return; }
+  if(k==="Escape"){
+    if(ordMode){ ordMode=false; ordPx=null; renderActions(); draw(); }
+    else if(pend){ pend=null; syncBrkt(); renderActions(); draw(); }
+  }
 });
 $("nextB").addEventListener("click", ()=>runFast(TICKS - tickIdx));
 $("jumpB").addEventListener("click", ()=>runFast(TICKS*15));
