@@ -56,6 +56,9 @@
   #liveB{display:none; color:var(--blue);}
   #chartWrap{flex:1; position:relative; margin:0; min-height:120px; border-bottom:1px solid var(--line);}
   #chart{position:absolute; inset:0;}
+  #autoB{position:absolute; right:6px; bottom:4px; z-index:5; width:22px; height:20px; line-height:20px; text-align:center;
+         font-size:12px; font-weight:700; border-radius:3px; color:var(--muted); cursor:pointer; background:var(--panel);}
+  #autoB.on{color:#fff; background:var(--blue);}
   #legend{position:absolute; top:6px; left:8px; z-index:4; pointer-events:none; font-size:13px; line-height:1.55;
           font-family:-apple-system,BlinkMacSystemFont,"Trebuchet MS",Roboto,Ubuntu,sans-serif; color:var(--text);}
   #lgSym{font-weight:700; font-size:14px;}
@@ -166,6 +169,7 @@
 
 <div id="chartWrap">
   <div id="chart"></div>
+  <div id="autoB" class="on" title="Auto-fit price scale (or double-click the price scale)">A</div>
   <div id="legend"><div id="lgSym"></div><div id="lgOhlc"></div><div id="lgEma"></div><div id="sessionTag"></div></div>
   <div id="banner"></div>
 </div>
@@ -259,7 +263,7 @@
 <script src="lightweight-charts.js"></script>
 <script>
 "use strict";
-const VERSION = "v5.1";
+const VERSION = "v5.2";
 /* =============== config / state =============== */
 const TICKS = 24;
 const INST = {
@@ -535,6 +539,7 @@ function newSession(){
   price=null; prevPrice=null; dayOver=false;
   pos=null; pend=null; ordMode=false; ordPx=null; sessLv=[];
   realized=0; balance=10000; tradeLog=[]; violCount=0;
+  if(typeof manualY!=="undefined"){ manualY=null; refreshAutoBtn(); chart.priceScale("right").applyOptions({autoScale:true}); }
   viewOfs=0;
   sessIV = estIV();
   buildEmas();
@@ -853,6 +858,7 @@ document.querySelectorAll("[data-r]").forEach(el=>{
 
 /* =============== chart (TradingView Lightweight Charts) =============== */
 const LWC = window.LightweightCharts;
+let manualY = null;              // TV "auto scale off": fixed price window the user dragged to
 const chartEl = $("chart");
 const DAY0 = Date.UTC(2001,0,1)/1000;          // synthetic dates keep the real day hidden
 const DAY1 = DAY0 + 86400;
@@ -894,6 +900,7 @@ const candle = chart.addCandlestickSeries({
   wickUpColor:"#089981", wickDownColor:"#f23645",
   priceFormat:{type:"price", precision:2, minMove:0.01},
   autoscaleInfoProvider: orig => {
+    if(manualY) return {priceRange:{minValue:manualY.min, maxValue:manualY.max}};
     const r = orig(); if(!r || !r.priceRange) return r;
     const xs = [];
     if(pos) xs.push(pos.sl, pos.tp, pos.entry);
@@ -989,7 +996,8 @@ function chartFull(){
   if(T!=="D") emaLive.forEach(st=>{
     const sty = emaStyle(st.slot);
     const s = chart.addLineSeries({color:sty.col, lineWidth:sty.w, priceLineVisible:false,
-                                   lastValueVisible:false, crosshairMarkerVisible:false, title:""});
+                                   lastValueVisible:false, crosshairMarkerVisible:false, title:"",
+                                   autoscaleInfoProvider: o => manualY ? null : o()});
     const pts=[];
     for(let j=0;j<sessTimes.length;j++){ const v=emaValAt(st,j); if(v!=null) pts.push({time:sessTimes[j], value:v}); }
     s.setData(pts);
@@ -1192,6 +1200,43 @@ chartEl.addEventListener("pointermove", e=>{   // grab cursor hint over draggabl
   chartEl.style.cursor = hitLine(e.clientY - r.top) ? "ns-resize" : "";
 });
 
+/* ---- TradingView-style free pan: drag up/down moves price too (auto-scale switches off; "A" restores) ---- */
+const MT=0.08, MB=0.2;                                  // price-scale margins (top / bottom share of pane)
+function visRange(){ const top=pOf(0), bot=pOf(paneH()); return (top==null||bot==null)?null:{top,bot}; }
+function setManualFromVis(v){ const h=v.top-v.bot; manualY={min:v.bot+MB*h, max:v.top-MT*h}; }
+function applyScale(){ chart.priceScale("right").applyOptions({autoScale:true}); refreshAutoBtn(); }
+function refreshAutoBtn(){ $("autoB").classList.toggle("on", !manualY); }
+function autoOn(){ manualY=null; applyScale(); }
+let vpan = null;
+chartEl.addEventListener("pointerdown", e=>{
+  if(drag) return;
+  const r = chartEl.getBoundingClientRect(), x=e.clientX-r.left, y=e.clientY-r.top;
+  if(y > paneH()) return;
+  if(x > chartEl.clientWidth - chart.priceScale("right").width()){ vpan={axis:true}; return; }
+  const v = visRange(); if(!v) return;
+  vpan = {y0:y, v, on:false, id:e.pointerId};
+});
+chartEl.addEventListener("pointermove", e=>{
+  if(!vpan || vpan.axis || drag) return;
+  const r = chartEl.getBoundingClientRect(), dy = (e.clientY-r.top) - vpan.y0;
+  if(!vpan.on && Math.abs(dy) < 6) return;
+  vpan.on = true;
+  const ppx = (vpan.v.top-vpan.v.bot)/paneH();
+  setManualFromVis({top:vpan.v.top+dy*ppx, bot:vpan.v.bot+dy*ppx});
+  applyScale();
+});
+const endVpan = ()=>{
+  if(vpan && vpan.axis){            // user stretched the price scale: keep that window, TV-style
+    setTimeout(()=>{ if(chart.priceScale("right").options().autoScale===false){ const v=visRange(); if(v){ setManualFromVis(v); applyScale(); } } },0);
+  }
+  vpan=null;
+};
+chartEl.addEventListener("pointerup", endVpan); chartEl.addEventListener("pointercancel", endVpan);
+chartEl.addEventListener("dblclick", e=>{
+  const r = chartEl.getBoundingClientRect();
+  if(e.clientX-r.left > chartEl.clientWidth - chart.priceScale("right").width()) autoOn();
+});
+$("autoB").addEventListener("click", autoOn);
 $("liveB").addEventListener("click", goLive);
 function zoomBy(f){ const ts=chart.timeScale(); ts.applyOptions({barSpacing:clamp(ts.options().barSpacing*f, 1.5, 40)}); }
 $("zoomInB").addEventListener("click", ()=>zoomBy(1.35));
