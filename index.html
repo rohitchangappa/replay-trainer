@@ -263,7 +263,7 @@
 <script src="lightweight-charts.js"></script>
 <script>
 "use strict";
-const VERSION = "v5.2";
+const VERSION = "v5.3";
 /* =============== config / state =============== */
 const TICKS = 24;
 const INST = {
@@ -1236,6 +1236,16 @@ chartEl.addEventListener("dblclick", e=>{
   const r = chartEl.getBoundingClientRect();
   if(e.clientX-r.left > chartEl.clientWidth - chart.priceScale("right").width()) autoOn();
 });
+// mouse wheel over the price scale zooms price (TradingView behavior); over the chart it zooms time (library default)
+chartEl.addEventListener("wheel", e=>{
+  if(drag) return;
+  const r = chartEl.getBoundingClientRect(), x=e.clientX-r.left, y=e.clientY-r.top;
+  if(x <= chartEl.clientWidth - chart.priceScale("right").width() || y > paneH()) return;
+  e.preventDefault(); e.stopPropagation();
+  const v = visRange(); if(!v) return;
+  const f = e.deltaY>0 ? 1.12 : 1/1.12, mid=(v.top+v.bot)/2, half=(v.top-v.bot)/2*f;
+  setManualFromVis({top:mid+half, bot:mid-half}); applyScale();
+}, {capture:true, passive:false});
 $("autoB").addEventListener("click", autoOn);
 $("liveB").addEventListener("click", goLive);
 function zoomBy(f){ const ts=chart.timeScale(); ts.applyOptions({barSpacing:clamp(ts.options().barSpacing*f, 1.5, 40)}); }
